@@ -15,6 +15,8 @@ function TikTokIcon({ size = 16 }) {
 
 export default function Footer() {
     const [activeTip, setActiveTip] = useState(null);
+    const [logoError, setLogoError] = useState(false);
+    const wordmarkSrc = `${import.meta.env.BASE_URL}branding/taxedhq-logo-transparent.png`;
 
     useEffect(() => {
         if (!activeTip) return undefined;
@@ -44,15 +46,26 @@ export default function Footer() {
                 {/* Brand */}
                 <div>
                     <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: 'none', marginBottom: 16 }}>
-                        <div style={{
-                            width: 34, height: 34, borderRadius: 10,
-                            background: 'linear-gradient(135deg, #34D399, #059669)',
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            boxShadow: '0 4px 14px rgba(52,211,153,0.3)'
-                        }}>
-                            <FileText size={16} color="#fff" />
-                        </div>
-                        <span style={{ fontFamily: font.serif, fontSize: 20, color: '#fff' }}>Taxed</span>
+                        {!logoError ? (
+                            <img
+                                src={wordmarkSrc}
+                                alt="Taxed HQ"
+                                onError={() => setLogoError(true)}
+                                style={{ height: 34, width: 'auto', display: 'block' }}
+                            />
+                        ) : (
+                            <>
+                                <div style={{
+                                    width: 34, height: 34, borderRadius: 10,
+                                    background: 'linear-gradient(135deg, #34D399, #059669)',
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    boxShadow: '0 4px 14px rgba(52,211,153,0.3)'
+                                }}>
+                                    <FileText size={16} color="#fff" />
+                                </div>
+                                <span style={{ fontFamily: font.serif, fontSize: 20, color: '#fff' }}>Taxed</span>
+                            </>
+                        )}
                     </Link>
                     <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
                         Finally see where your money goes.<br />

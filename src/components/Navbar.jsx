@@ -14,7 +14,9 @@ const glass = {
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [logoError, setLogoError] = useState(false);
     const location = useLocation();
+    const wordmarkSrc = `${import.meta.env.BASE_URL}branding/taxedhq-logo-transparent.png`;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 24);
@@ -50,15 +52,26 @@ export default function Navbar() {
             }}>
                 {/* Logo */}
                 <Link to="/" className="brand-link" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: 'none' }}>
-                    <div style={{
-                        width: 34, height: 34, borderRadius: 10,
-                        background: 'linear-gradient(135deg, #34D399, #059669)',
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: '0 4px 16px rgba(52,211,153,0.35)'
-                    }}>
-                        <FileText size={16} color="#fff" />
-                    </div>
-                    <span className="brand-name" style={{ fontFamily: font.serif, fontSize: 20, color: '#fff', letterSpacing: '-0.01em' }}>Taxed</span>
+                    {!logoError ? (
+                        <img
+                            src={wordmarkSrc}
+                            alt="Taxed HQ"
+                            onError={() => setLogoError(true)}
+                            style={{ height: 30, width: 'auto', display: 'block' }}
+                        />
+                    ) : (
+                        <>
+                            <div style={{
+                                width: 34, height: 34, borderRadius: 10,
+                                background: 'linear-gradient(135deg, #34D399, #059669)',
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                boxShadow: '0 4px 16px rgba(52,211,153,0.35)'
+                            }}>
+                                <FileText size={16} color="#fff" />
+                            </div>
+                            <span className="brand-name" style={{ fontFamily: font.serif, fontSize: 20, color: '#fff', letterSpacing: '-0.01em' }}>Taxed</span>
+                        </>
+                    )}
                 </Link>
 
                 {/* Desktop Nav */}

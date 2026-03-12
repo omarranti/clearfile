@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle2, DollarSign, Calculator, FileText, Check, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, DollarSign, Calculator, FileText, Check, ShieldCheck, PlayCircle } from 'lucide-react';
 
 const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 
@@ -16,6 +16,8 @@ const glassBase = {
     WebkitBackdropFilter: 'blur(28px) saturate(160%)',
     border: '1px solid rgba(255,255,255,0.1)',
 };
+const demoVideoSrc = `${import.meta.env.BASE_URL}media/model-demo.mp4`;
+const demoPosterSrc = `${import.meta.env.BASE_URL}og-image.png`;
 
 function GradientOrbs() {
     return (
@@ -117,6 +119,61 @@ export default function Landing() {
                                     <CheckCircle2 color="#34D399" size={18} style={{ flexShrink: 0 }} /> {item}
                                 </div>
                             ))}
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── Product Demo Video ── */}
+            <section className="demo-section" style={{ padding: '112px 24px 100px', position: 'relative', zIndex: 1 }}>
+                <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 38 }}>
+                        <motion.div initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', ...glassBase, borderRadius: 99, color: '#34D399', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+                            <PlayCircle size={14} /> See It In Action
+                        </motion.div>
+                        <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                            style={{ fontFamily: font.serif, fontSize: 'clamp(30px, 5vw, 52px)', color: '#fff', lineHeight: 1.08, letterSpacing: '-0.02em', marginBottom: 12 }}>
+                            Watch how fast tax clarity happens.
+                        </motion.h2>
+                        <motion.p initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }}
+                            style={{ maxWidth: 700, margin: '0 auto', fontSize: 17, color: 'rgba(255,255,255,0.52)', lineHeight: 1.65 }}>
+                            This walkthrough shows a real model flow: input your numbers, compare outcomes, then get clear next actions in minutes.
+                        </motion.p>
+                    </div>
+
+                    <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                        className="demo-band"
+                        style={{ ...glassBase, borderRadius: 28, padding: '22px', display: 'grid', gridTemplateColumns: 'minmax(0,1.45fr) minmax(0,1fr)', gap: 20, alignItems: 'stretch' }}>
+                        <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', background: '#05060B', position: 'relative' }}>
+                            <video
+                                src={demoVideoSrc}
+                                poster={demoPosterSrc}
+                                controls
+                                muted
+                                playsInline
+                                preload="metadata"
+                                style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', minHeight: 280 }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center' }}>
+                            {[
+                                'Turn raw paycheck data into a visual tax story.',
+                                'Clone scenarios to compare raise, bonus, or job-change outcomes.',
+                                'Get actionable checklists so you know what to do next.',
+                            ].map((item, idx) => (
+                                <div key={idx} style={{ ...glassBase, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                    <CheckCircle2 size={16} color="#34D399" style={{ marginTop: 2, flexShrink: 0 }} />
+                                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{item}</span>
+                                </div>
+                            ))}
+                            <Link
+                                to="/calculator"
+                                style={{ marginTop: 8, alignSelf: 'flex-start', padding: '13px 24px', borderRadius: 99, background: '#34D399', color: '#000', fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 36px rgba(52,211,153,0.34)' }}
+                            >
+                                Try The Model Yourself <ArrowRight size={16} />
+                            </Link>
                         </div>
                     </motion.div>
                 </div>
@@ -227,6 +284,7 @@ export default function Landing() {
             <style>{`
               @media (max-width: 1024px) {
                 .hero-section { padding-top: 132px !important; padding-bottom: 96px !important; }
+                .demo-section { padding-top: 96px !important; padding-bottom: 88px !important; }
                 .features-section { padding-top: 108px !important; padding-bottom: 108px !important; }
                 .comparison-section { padding-bottom: 104px !important; }
               }
@@ -239,6 +297,8 @@ export default function Landing() {
                 .hero-primary-cta, .hero-secondary-cta { width: min(100%, 340px); justify-content: center; padding: 14px 22px !important; font-size: 15px !important; }
                 .price-pill { padding: 12px 18px !important; gap: 10px !important; }
                 .trust-card { padding: 20px 18px !important; }
+                .demo-section { padding: 72px 16px 72px !important; }
+                .demo-band { grid-template-columns: 1fr !important; border-radius: 22px !important; padding: 14px !important; gap: 14px !important; }
                 .features-section { padding: 88px 16px !important; }
                 .comparison-section { padding: 0 16px 88px !important; }
                 .resource-section { padding: 0 16px 80px !important; }
@@ -252,6 +312,7 @@ export default function Landing() {
                 .hero-cta { width: 100%; }
                 .hero-primary-cta, .hero-secondary-cta { width: 100%; max-width: 100%; }
                 .price-pill .price-divider { display: none; }
+                .demo-section { padding-top: 64px !important; }
               }
             `}</style>
         </div>
