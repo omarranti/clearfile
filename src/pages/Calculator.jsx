@@ -489,7 +489,11 @@ export default function TaxedApp({ session }) {
   const [status, setStatus] = useState("single");
   const [stateCode, setStateCode] = useState("CA");
   const [deps, setDeps] = useState(0);
+  const [incomeType, setIncomeType] = useState("w2");
   const [hasPenalty, setHasPenalty] = useState(false);
+  const [hasStudentLoans, setHasStudentLoans] = useState(false);
+  const [hasRetirement, setHasRetirement] = useState(false);
+  const [hasHDHP, setHasHDHP] = useState(false);
   const [bracketOpen, setBracketOpen] = useState(false);
   const [actions, setActions] = useState({});
   const [cloudLoading, setCloudLoading] = useState(false);
@@ -506,7 +510,18 @@ export default function TaxedApp({ session }) {
   const userId = session?.user?.id;
 
   const r = useMemo(() => fullCalc(income, status, deps, hasPenalty, 5, true, stateCode), [income, status, deps, hasPenalty, stateCode]);
-  const onBoard = (d) => { setIncome(d.income); setStatus(d.status); setDeps(d.deps); setStateCode(d.stateCode); setHasPenalty(d.hasPenalty); setBoarded(true); };
+  const onBoard = (d) => {
+    setIncome(d.income);
+    setStatus(d.status);
+    setDeps(d.deps);
+    setStateCode(d.stateCode);
+    setIncomeType(d.incomeType || "w2");
+    setHasPenalty(Boolean(d.hasPenalty));
+    setHasStudentLoans(Boolean(d.hasStudentLoans));
+    setHasRetirement(Boolean(d.hasRetirement));
+    setHasHDHP(Boolean(d.hasHDHP));
+    setBoarded(true);
+  };
   const hasFullAccess = Boolean(entitlement?.full_access);
 
   useEffect(() => {
@@ -531,7 +546,11 @@ export default function TaxedApp({ session }) {
         setStatus(p.status || "single");
         setDeps(Number(p.deps) || 0);
         setStateCode(p.stateCode || "CA");
+        setIncomeType(p.incomeType || "w2");
         setHasPenalty(Boolean(p.hasPenalty));
+        setHasStudentLoans(Boolean(p.hasStudentLoans));
+        setHasRetirement(Boolean(p.hasRetirement));
+        setHasHDHP(Boolean(p.hasHDHP));
         setBoarded(true);
         setCloudMessage("Loaded your last saved scenario.");
       }
@@ -708,7 +727,11 @@ export default function TaxedApp({ session }) {
       status,
       deps,
       stateCode,
+      incomeType,
       hasPenalty,
+      hasStudentLoans,
+      hasRetirement,
+      hasHDHP,
       savedAt: new Date().toISOString(),
     };
 
@@ -757,6 +780,148 @@ export default function TaxedApp({ session }) {
     { id: "eitc", text: r.eitc.eligible ? <>Confirm <strong style={{ color: C.text }}>EITC eligibility</strong> with your CPA — at {short(income)} you could get <strong style={{ color: C.success }}>{fmt(r.eitc.amount)}</strong> back.</> : <>Check with your CPA if any <strong style={{ color: C.text }}>credits</strong> apply — EITC, student loan interest, Saver's Credit.</> },
     { id: "ira", text: <>Open a <strong style={{ color: C.text }}>Traditional IRA before April 15</strong> — even $2K saves ≈{fmt(Math.round(2000 * r.fed.marginalRate))} in federal tax.</> },
   ];
+
+  const dynamicQAs = useMemo(() => {
+    const faqs = [];
+
+    if (hasPenalty) {
+      faqs.push({
+        id: "fta",
+        q: "Should I use the FTA waiver to get rid of a penalty?",
+        open: true,
+        content: (
+          <>
+            <p><strong style={{ color: C.success }}>Yes — usually it is worth requesting.</strong> FTA is an IRS path that can remove a first-time penalty if eligibility rules are met.</p>
+            <p style={{ marginTop: 10 }}>Call <strong style={{ color: C.primary }}>1-800-829-1040</strong>: <em>"I'd like to request a First-Time Penalty Abatement."</em></p>
+            <p style={{ marginTop: 10 }}><strong>Key detail:</strong> The 3-year lookback is from the <em>penalty year</em>, not today. Penalty for 2024? IRS checks 2021–2023.</p>
+          </>
+        ),
+      });
+      faqs.push({
+        id: "cpa",
+        q: "How do I approach my CPA about a late-filing issue?",
+        content: (
+          <>
+            <p>Be <strong style={{ color: C.text }}>direct, factual, and calm</strong>, and ask for a concrete next step + timeline.</p>
+            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.primary}`, borderRadius: 8, padding: "14px 16px", margin: "12px 0", fontStyle: "italic", color: C.text }}>
+              "I noticed a late-filing penalty on my return. Can you request First-Time Penalty Abatement with the IRS this week and send me confirmation?"
+            </div>
+          </>
+        ),
+      });
+    }
+
+    if (incomeType === "1099" || incomeType === "mixed") {
+      faqs.push({
+        id: "estimated-tax",
+        q: "I have 1099 income. Should I make quarterly estimated payments?",
+        content: (
+          <>
+            <p>Usually yes. With self-employment income, waiting until April can create a larger bill and potential underpayment penalties.</p>
+            <p style={{ marginTop: 8 }}>Use this estimate as a planning baseline, then set aside a fixed % from each invoice and validate quarterly targets with your CPA.</p>
+          </>
+        ),
+      });
+    }
+
+    if (hasStudentLoans) {
+      faqs.push({
+        id: "student-loans",
+        q: "Can my student loan interest lower my taxes?",
+        content: (
+          <>
+            <p>Potentially. Up to <strong style={{ color: C.primary }}>$2,500</strong> of qualifying interest may be deductible depending on income and filing status.</p>
+            <p style={{ marginTop: 8 }}>Bring your Form 1098-E to filing time and confirm phase-out limits with your preparer.</p>
+          </>
+        ),
+      });
+    }
+
+    if (hasRetirement) {
+      faqs.push({
+        id: "retirement",
+        q: "How do retirement contributions change this estimate?",
+        content: (
+          <>
+            <p>Traditional pre-tax contributions can reduce taxable income, which may lower your effective tax rate and increase take-home over time.</p>
+            <p style={{ marginTop: 8 }}>Re-run your numbers after contribution changes to compare impact before and after.</p>
+          </>
+        ),
+      });
+    }
+
+    if (hasHDHP) {
+      faqs.push({
+        id: "hsa",
+        q: "I selected an HDHP. How does an HSA help?",
+        content: (
+          <>
+            <p>An HSA can provide triple tax treatment: pre-tax contributions, tax-free growth, and tax-free qualified medical withdrawals.</p>
+            <p style={{ marginTop: 8 }}>If you're HSA-eligible, this can be one of the highest-value tax levers in your profile.</p>
+          </>
+        ),
+      });
+    }
+
+    if (deps > 0) {
+      faqs.push({
+        id: "dependents",
+        q: "I have dependents. What credits should I ask about?",
+        content: (
+          <>
+            <p>Start with Child Tax Credit and EITC rules. Eligibility depends on dependent type, income, and filing status.</p>
+            <p style={{ marginTop: 8 }}>Use your current estimate as a baseline, then confirm dependent-specific credits with your CPA before filing.</p>
+          </>
+        ),
+      });
+    }
+
+    faqs.push({
+      id: "coverage",
+      q: "Do these estimates include every possible tax detail?",
+      content: (
+        <>
+          <p>The model includes federal and California brackets, standard deductions, and common credits for educational planning.</p>
+          <p style={{ marginTop: 8 }}>It may not include every local tax, phase-out edge case, or one-off item from your return. Use this to prepare better questions for your CPA, then confirm final filing numbers with them.</p>
+        </>
+      ),
+    });
+
+    if (stateCode !== "CA") {
+      faqs.push({
+        id: "state-limit",
+        q: `I selected ${stateLabel}. Is this state estimate exact?`,
+        content: (
+          <>
+            <p>Not yet. This version currently models California state tax in detail, while non-CA selections are best treated as directional planning inputs.</p>
+            <p style={{ marginTop: 8 }}>For filing-accurate state numbers outside CA, confirm with a state-specific calculator or your CPA.</p>
+          </>
+        ),
+      });
+    }
+
+    faqs.push({
+      id: "income-change",
+      q: "What should I do if my income changes mid-year?",
+      content: (
+        <>
+          <p>Re-run your scenario each time income shifts (raise, bonus, freelance project) and compare your new effective rate + take-home.</p>
+          <p style={{ marginTop: 8 }}>If estimated tax owed jumps, set aside part of each paycheck/invoice immediately to avoid end-of-year surprises.</p>
+        </>
+      ),
+    });
+
+    return faqs;
+  }, [
+    hasPenalty,
+    incomeType,
+    hasStudentLoans,
+    hasRetirement,
+    hasHDHP,
+    deps,
+    stateCode,
+    stateLabel,
+  ]);
 
   return (
     <div className="calculator-page" style={{ minHeight: "100vh", background: C.bg, fontFamily: font.sans, paddingBottom: 120 }}>
@@ -956,31 +1121,11 @@ export default function TaxedApp({ session }) {
 
         <Sect icon="❓">Your Questions, Answered</Sect>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <QA q="Should I use the FTA waiver to get rid of a penalty?" open={hasPenalty}>
-            <p><strong style={{ color: C.success }}>Yes — 100%.</strong> It's IRS-sanctioned with zero downside. $600 back for a 10-minute call.</p>
-            <p style={{ marginTop: 10 }}>Call <strong style={{ color: C.primary }}>1-800-829-1040</strong>: <em>"I'd like to request a First-Time Penalty Abatement."</em></p>
-            <p style={{ marginTop: 10 }}><strong>Key detail:</strong> The 3-year lookback is from the <em>penalty year</em>, not today. Penalty for 2024? IRS checks 2021–2023.</p>
-          </QA>
-          <QA q="How do I approach my CPA about their mistake?">
-            <p>Be <strong style={{ color: C.text }}>direct, factual, calm:</strong></p>
-            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.primary}`, borderRadius: 8, padding: "14px 16px", margin: "12px 0", fontStyle: "italic", color: C.text }}>
-              "Hey [name], the late filing generated a penalty. Since the delay was on the filing side, please call the IRS and request the FTA on my behalf. Can you handle that this week?"
-            </div>
-            <p style={{ marginTop: 8 }}>If they refuse — time for a new CPA.</p>
-          </QA>
-          <QA q="What are the signs of a good CPA?">
-            <p><strong style={{ color: C.success }}>Green flags:</strong> Proactive before deadlines, plain-English explanations, mentions credits unprompted, owns mistakes.</p>
-            <p style={{ marginTop: 8 }}><strong style={{ color: C.danger }}>Red flags:</strong> Only contacts you at tax time, won't fix their errors, never mentioned EITC/IRA.</p>
-            <p style={{ marginTop: 8 }}><strong>Find one:</strong> CPAverify.org, NATP.org. Expect $200–$400.</p>
-          </QA>
-          <QA q="Do these estimates include every possible tax detail?">
-            <p>The model includes federal and California brackets, standard deductions, and common credits for educational planning.</p>
-            <p style={{ marginTop: 8 }}>It may not include every local tax, phase-out edge case, or one-off item from your return. Use this to prepare better questions for your CPA, then confirm final filing numbers with them.</p>
-          </QA>
-          <QA q="What should I do if my income changes mid-year?">
-            <p>Re-run your scenario each time income shifts (raise, bonus, freelance project) and compare your new effective rate + take-home.</p>
-            <p style={{ marginTop: 8 }}>If estimated tax owed jumps, set aside part of each paycheck/invoice immediately to avoid end-of-year surprises.</p>
-          </QA>
+          {dynamicQAs.map((item) => (
+            <QA key={item.id} q={item.q} open={Boolean(item.open)}>
+              {item.content}
+            </QA>
+          ))}
         </div>
 
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
