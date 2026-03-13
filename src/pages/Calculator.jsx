@@ -687,15 +687,8 @@ export default function TaxedApp({ session }) {
     }
   }, [income, hasFullAccess, incomeWallShown]);
 
-  if (!boarded) return <Onboarding onDone={onBoard} />;
-
-  const sldPct = ((income - 15000) / (500000 - 15000)) * 100;
-  const statusLabel = FILING.find(f => f.value === status)?.label || status;
-  const stateLabel = STATES.find(s => s.val === stateCode)?.label || stateCode;
   const iraSave = Math.round(5000 * r.fed.marginalRate);
   const hsaSave = Math.round(4150 * r.fed.marginalRate);
-  const maxSave = (hasPenalty && r.penalty ? r.penalty.ftaSavings : 0) + r.eitc.amount + iraSave;
-  const toggleAction = (id) => setActions(p => ({ ...p, [id]: !p[id] }));
   const opportunities = useMemo(() => {
     const list = [
       {
@@ -753,6 +746,14 @@ export default function TaxedApp({ session }) {
   }, [r.eitc.amount, r.eitc.eligible, income, iraSave, hsaSave, r.calEitc.eligible, r.calEitc.amount]);
   const primaryOpportunity = opportunities[0];
   const lockedOpportunities = opportunities.slice(1, 4);
+
+  if (!boarded) return <Onboarding onDone={onBoard} />;
+
+  const sldPct = ((income - 15000) / (500000 - 15000)) * 100;
+  const statusLabel = FILING.find(f => f.value === status)?.label || status;
+  const stateLabel = STATES.find(s => s.val === stateCode)?.label || stateCode;
+  const maxSave = (hasPenalty && r.penalty ? r.penalty.ftaSavings : 0) + r.eitc.amount + iraSave;
+  const toggleAction = (id) => setActions(p => ({ ...p, [id]: !p[id] }));
 
   const generatePDF = async () => {
     if (!hasFullAccess) {
