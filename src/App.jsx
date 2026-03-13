@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -9,6 +9,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
+import UnderstandYourTaxes from './pages/UnderstandYourTaxes';
+import TakeHomePayCalculator from './pages/TakeHomePayCalculator';
+import FreelanceTaxCalculator from './pages/FreelanceTaxCalculator';
 import { supabase } from './lib/supabase';
 
 const SEO_MAP = {
@@ -39,6 +42,18 @@ const SEO_MAP = {
     "/admin": {
         title: "Admin Login | Taxed",
         desc: "Admin access for Taxed."
+    },
+    "/understand-your-taxes": {
+        title: "Understand Your Taxes - Finally See Where Your Money Goes",
+        desc: "TurboTax files your taxes. Taxed explains them. See exactly where your money goes - brackets, deductions, and credits in plain English. One-time $29.99."
+    },
+    "/tax-calculator-take-home-pay": {
+        title: "Tax Calculator: See Your Exact Take-Home Pay Before You Decide",
+        desc: "Plug in your income and see your real take-home pay in seconds. Model a raise, side hustle, or job change before you commit. No subscription. No confusion."
+    },
+    "/freelance-tax-calculator": {
+        title: "Freelance Tax Calculator: Know What You Owe Before April",
+        desc: "Going freelance? See exactly what you'll owe in taxes - federal + California - before your first invoice. Quarterly estimates, deductions, no surprises."
     }
 };
 
@@ -55,8 +70,28 @@ function RouteHandler() {
         
         let ogTitle = document.querySelector('meta[property="og:title"]');
         let ogDesc = document.querySelector('meta[property="og:description"]');
+        let ogUrl = document.querySelector('meta[property="og:url"]');
         if (ogTitle) ogTitle.setAttribute("content", seo.title);
         if (ogDesc) ogDesc.setAttribute("content", seo.desc);
+        if (ogUrl) ogUrl.setAttribute("content", window.location.href);
+
+        const canonicalHref = `${window.location.origin}${pathname}`;
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+            canonical = document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonical);
+        }
+        canonical.setAttribute('href', canonicalHref);
+
+        let robots = document.querySelector('meta[name="robots"]');
+        if (!robots) {
+            robots = document.createElement('meta');
+            robots.setAttribute('name', 'robots');
+            document.head.appendChild(robots);
+        }
+        const shouldNoIndex = pathname === '/auth' || pathname === '/admin';
+        robots.setAttribute('content', shouldNoIndex ? 'noindex, nofollow' : 'index, follow');
     }, [pathname]);
     
     return null;
@@ -112,6 +147,9 @@ export default function App() {
                         <Route path="/calculator" element={session ? <Calculator session={session} /> : <Navigate to="/auth" replace />} />
                         <Route path="/auth" element={<Auth session={session} />} />
                         <Route path="/admin" element={<Admin isAdmin={isAdmin} onAdminLogin={adminLogin} onAdminLogout={adminLogout} />} />
+                        <Route path="/understand-your-taxes" element={<UnderstandYourTaxes />} />
+                        <Route path="/tax-calculator-take-home-pay" element={<TakeHomePayCalculator />} />
+                        <Route path="/freelance-tax-calculator" element={<FreelanceTaxCalculator />} />
                         <Route path="/resources" element={<Resources />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<TermsOfService />} />

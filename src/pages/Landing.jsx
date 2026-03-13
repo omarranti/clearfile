@@ -134,6 +134,20 @@ export default function Landing() {
         </div>
       </section>
 
+      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 40px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", ...glass, borderRadius: 18, padding: "16px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+          <Link to="/understand-your-taxes" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
+            Understand Your Taxes
+          </Link>
+          <Link to="/tax-calculator-take-home-pay" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
+            Tax Calculator Take-Home Pay
+          </Link>
+          <Link to="/freelance-tax-calculator" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
+            Freelance Tax Calculator
+          </Link>
+        </div>
+      </section>
+
       {/* Section 2: Core Problem */}
       <section style={{ position: "relative", zIndex: 1, padding: "22px 24px 80px" }}>
         <motion.div

@@ -1,0 +1,59 @@
+import { Link } from "react-router-dom";
+import { ArrowRight, ReceiptText, CalendarClock, ShieldAlert } from "lucide-react";
+
+const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
+const glass = {
+  background: "rgba(255,255,255,0.72)",
+  border: "1px solid #d6e2ef",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+};
+
+function Item({ icon: Icon, title, text }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "40px 1fr", gap: 10, alignItems: "start" }}>
+      <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(31,157,139,0.12)", display: "grid", placeItems: "center" }}>
+        <Icon size={18} color="#1f9d8b" />
+      </div>
+      <div>
+        <div style={{ color: "#102a43", fontWeight: 700, marginBottom: 4 }}>{title}</div>
+        <div style={{ color: "#4f6478", lineHeight: 1.65 }}>{text}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function FreelanceTaxCalculator() {
+  return (
+    <div style={{ fontFamily: font.sans, color: "#102a43", minHeight: "100vh", background: "#f5f9ff", padding: "104px 24px 100px" }}>
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <div style={{ ...glass, borderRadius: 24, padding: "34px 30px", marginBottom: 18 }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#1f9d8b", marginBottom: 14 }}>
+            how much tax will i owe freelance
+          </p>
+          <h1 style={{ margin: "0 0 14px", fontFamily: font.serif, fontSize: "clamp(34px, 5vw, 60px)", lineHeight: 1.05 }}>
+            Freelance Tax Calculator: Know What You Owe Before April
+          </h1>
+          <p style={{ margin: 0, color: "#4f6478", lineHeight: 1.78, fontSize: "clamp(16px, 1.6vw, 19px)" }}>
+            Freelance income can be unpredictable, but your tax planning does not have to be. Estimate what you owe now, before quarterly deadlines and year-end surprises.
+          </p>
+        </div>
+
+        <div style={{ ...glass, borderRadius: 20, padding: 24, display: "grid", gap: 16, marginBottom: 18 }}>
+          <Item icon={ReceiptText} title="Estimate What You Owe" text="Model freelance income against federal and California exposure in one place." />
+          <Item icon={CalendarClock} title="Plan Quarterly Payments" text="Use scenario visibility to set aside a smarter amount from each invoice." />
+          <Item icon={ShieldAlert} title="Catch Risk Early" text="Spot potential underpayment and penalty risk before it becomes an expensive problem." />
+        </div>
+
+        <div style={{ ...glass, borderRadius: 20, padding: "24px 24px" }}>
+          <p style={{ margin: "0 0 18px", color: "#4f6478", lineHeight: 1.72 }}>
+            Going freelance is easier when taxes stop being a mystery. Use Taxed to run scenarios, compare outcomes, and make confident decisions before April.
+          </p>
+          <Link to="/calculator" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", background: "#1f9d8b", color: "#fff", fontWeight: 700, borderRadius: 999, padding: "12px 18px" }}>
+            Estimate My Freelance Taxes <ArrowRight size={15} />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

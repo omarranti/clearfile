@@ -48,6 +48,14 @@ export default function Resources() {
         </div>
 
         <section style={{ marginBottom: 60 }}>
+          <div style={{ ...glass, borderRadius: 16, padding: "14px 16px", marginBottom: 18, display: "grid", gap: 8 }}>
+            <div style={{ color: "#102a43", fontWeight: 700, fontSize: 13 }}>Popular tax clarity pages</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              <Link to="/understand-your-taxes" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Understand Your Taxes</Link>
+              <Link to="/tax-calculator-take-home-pay" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Take-Home Pay Calculator</Link>
+              <Link to="/freelance-tax-calculator" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Freelance Tax Calculator</Link>
+            </div>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(31,157,139,0.12)", display: "grid", placeItems: "center" }}>
               <Database size={18} color="#1f9d8b" />
