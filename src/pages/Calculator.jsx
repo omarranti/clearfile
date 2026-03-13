@@ -165,7 +165,7 @@ const fmt = (n) => "$" + Math.round(n).toLocaleString();
 const fmtP = (r) => (r * 100).toFixed(1) + "%";
 const short = (n) => n >= 1000 ? "$" + Math.round(n / 1000) + "K" : fmt(n);
 
-const C = { primary: "#1f9d8b", primaryLight: "#57c8ba", primaryDark: "#127f72", secondary: "#6C5CE7", secondaryLight: "#a29bfe", accent: "#FF6B6B", accentLight: "#ffa8a8", accentDark: "#e05252", success: "#10b981", warning: "#f59e0b", danger: "#ef4444", info: "#6366f1", bg: "#FFFDF7", surface: "#FFFFFF", border: "#EEE8E0", text: "#1A1A2E", textSec: "#555770", muted: "#8E8EA0" };
+const C = { primary: "#1a3c4d", primaryLight: "#2a6f5f", primaryAccent: "#1f9d8b", teal: "#1f9d8b", gold: "#c9952b", goldLight: "#f5e6c8", accent: "#c9952b", accentDark: "#a67b1d", success: "#1f9d8b", warning: "#c9952b", danger: "#c0392b", info: "#2a6f5f", bg: "#f4f7f4", surface: "#FFFFFF", border: "#e2e0da", text: "#1a2e35", textSec: "#4a6670", muted: "#7a9099", fedPill: "#1a3c4d", caPill: "#2a6f5f", ssPill: "#5a8a7a", medPill: "#c9952b", takePill: "#1f9d8b" };
 const font = { sans: "'DM Sans', system-ui, sans-serif" };
 const shadow = { sm: "0 2px 8px rgba(26,26,46,0.06)", md: "0 12px 32px rgba(26,26,46,0.1)", card: "0 4px 16px rgba(26,26,46,0.07)" };
 
@@ -715,39 +715,32 @@ export default function TaxedApp({ session }) {
   return (
     <div className="calculator-page" style={{ minHeight: "100vh", background: C.bg, fontFamily: font.sans, paddingBottom: 120 }}>
       <div ref={reportRef} className="calculator-report" style={{ maxWidth: 960, margin: "0 auto", padding: "36px 24px", position: "relative", zIndex: 1 }}>
-        <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontWeight: 800, fontSize: 20, color: C.text }}>{BRAND.name}</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button onClick={generatePDF} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", background: C.surface, border: `2px solid ${C.border}`, borderRadius: 14, fontSize: 15, fontWeight: 700, color: C.text, cursor: "pointer" }}>
-                <Download size={16} /> Export PDF
-              </button>
-              {userId && (
-                <button onClick={saveScenarioToCloud} disabled={cloudLoading} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", background: C.surface, border: `2px solid ${C.border}`, borderRadius: 14, fontSize: 15, fontWeight: 700, color: C.text, cursor: cloudLoading ? "wait" : "pointer", opacity: cloudLoading ? 0.7 : 1 }}>
-                  <CloudUpload size={16} /> {cloudLoading ? "Saving..." : "Save"}
+        <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 24 }}>
+          <div style={{ background: C.primary, borderRadius: 20, padding: "28px 24px", marginBottom: 20, color: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.15)", display: "grid", placeItems: "center" }}><FileText size={16} color="#fff" /></div>
+                <span style={{ fontWeight: 800, fontSize: 18 }}>taxedhq</span>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={generatePDF} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+                  <Download size={14} /> Export PDF
                 </button>
-              )}
+                {userId && (
+                  <button onClick={saveScenarioToCloud} disabled={cloudLoading} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, color: "#fff", cursor: cloudLoading ? "wait" : "pointer", opacity: cloudLoading ? 0.7 : 1 }}>
+                    <CloudUpload size={14} /> {cloudLoading ? "Saving..." : "Save"}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          {cloudMessage && (
-            <div style={{ marginBottom: 12, fontSize: 15, fontWeight: 600, color: cloudMessage.startsWith("Save failed") ? C.danger : C.success }}>
-              {cloudMessage}
-            </div>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: C.primary, background: `${C.primary}12`, padding: "5px 12px", borderRadius: 99 }}>{short(income)} · {stateLabel} · {statusLabel}</span>
-          </div>
-          <h1 style={{ fontFamily: font.sans, fontWeight: 800, fontSize: "clamp(28px, 5vw, 40px)", color: C.text, lineHeight: 1.15, marginBottom: 8 }}>Your tax breakdown</h1>
-          <p style={{ color: C.textSec, fontSize: 17, lineHeight: 1.6 }}>Drag the slider to explore. Every number updates instantly.</p>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ background: `${C.info}0C`, border: `2px solid ${C.info}20`, borderRadius: 18, padding: "16px 20px", display: "flex", gap: 14, alignItems: "center", marginBottom: 36 }}>
-          <span style={{ fontSize: 24, flexShrink: 0 }}>📚</span>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>Educational context only</div>
-            <div style={{ fontSize: 15, color: C.textSec, lineHeight: 1.5 }}>This is a modeling tool, not a filing service or tax advice.</div>
+            {cloudMessage && (
+              <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 600, color: cloudMessage.startsWith("Save failed") ? "#fca5a5" : "#a7f3d0" }}>
+                {cloudMessage}
+              </div>
+            )}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.15)", padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700, marginBottom: 14 }}>TAX CLARITY PLATFORM</div>
+            <h1 style={{ fontFamily: font.sans, fontWeight: 800, fontSize: "clamp(24px, 5vw, 34px)", color: "#fff", lineHeight: 1.2, marginBottom: 4 }}>Your Tax Breakdown</h1>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{fmt(income)} income · {statusLabel} · {stateLabel}</p>
           </div>
         </motion.div>
 
@@ -794,15 +787,19 @@ export default function TaxedApp({ session }) {
           </KPI>
 
           <KPI label="Effective Tax Rate" value={"≈" + fmtP(r.combined.effectiveRate)} color={C.primary} desc={`Take-home: ${fmt(r.combined.takeHome)}/yr · ${fmt(r.combined.monthlyTakeHome)}/mo`} icon={TrendingDown} delay={0.1}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: `${C.primary}08`, border: `1px solid ${C.primary}15`, borderRadius: 99, padding: "4px 12px", marginTop: 10, fontSize: 12, color: C.primary, fontWeight: 600 }}>
-              Marginal: {fmtP(r.fed.marginalRate)} fed + {fmtP(r.st.marginalRate)} {stateCode}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+              <span style={{ padding: "6px 12px", borderRadius: 99, background: C.fedPill, color: "#fff", fontSize: 13, fontWeight: 700 }}>Fed {fmtP(r.fed.effectiveRate)}</span>
+              <span style={{ padding: "6px 12px", borderRadius: 99, background: C.caPill, color: "#fff", fontSize: 13, fontWeight: 700 }}>CA {fmtP(r.st.effectiveRate)}</span>
+              <span style={{ padding: "6px 12px", borderRadius: 99, background: C.ssPill, color: "#fff", fontSize: 13, fontWeight: 700 }}>SS 6.2%</span>
+              <span style={{ padding: "6px 12px", borderRadius: 99, background: C.medPill, color: "#fff", fontSize: 13, fontWeight: 700 }}>Med</span>
+              <span style={{ padding: "6px 12px", borderRadius: 99, background: C.takePill, color: "#fff", fontSize: 13, fontWeight: 700 }}>Take-home</span>
             </div>
           </KPI>
         </div>
 
         <Sect icon="💸">Where Your Money Goes</Sect>
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 24, padding: "28px 24px", boxShadow: shadow.card, overflow: "hidden" }}>
+          style={{ background: C.surface, border: `2px solid ${C.border}`, borderRadius: 20, padding: "24px 24px", boxShadow: shadow.card }}>
           <Bar label="Gross Income" amount={fmt(income)} pct={100} color={`linear-gradient(90deg, ${C.info}, #8B5CF6)`} delay={0.1} />
           <Bar label="Federal Standard Deduction" amount={"−" + fmt(r.fed.standardDeduction)} amtColor={C.success} pct={income > 0 ? r.fed.standardDeduction / income * 100 : 0} color={C.success} delay={0.15} />
           <Bar label="Federal Taxable Income" amount={fmt(r.fed.taxableIncome)} amtColor={C.accent} pct={income > 0 ? r.fed.taxableIncome / income * 100 : 0} color={`linear-gradient(90deg, ${C.accent}, #F97316)`} delay={0.2} />
