@@ -30,8 +30,31 @@ function Feature({ icon: Icon, title, text, reduceMotion }) {
 
 export default function TakeHomePayCalculator() {
   const reduceMotion = useReducedMotion();
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Will a raise always increase my take-home pay?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A raise usually increases take-home pay, but the net increase can feel smaller because part of the extra income is taxed at higher marginal brackets.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "When should I re-calculate take-home?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Re-calculate whenever your income mix changes, including raises, bonuses, second jobs, side income, or filing-status updates.",
+        },
+      },
+    ],
+  };
   return (
     <div style={{ fontFamily: font.sans, color: "#102a43", minHeight: "100vh", background: "#f5f9ff", padding: "104px 24px 100px" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div style={{ maxWidth: 1020, margin: "0 auto" }}>
         <motion.div
           style={{ ...glass, borderRadius: 24, padding: "34px 30px", marginBottom: 18 }}

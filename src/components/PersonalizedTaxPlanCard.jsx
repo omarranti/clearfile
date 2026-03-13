@@ -115,9 +115,14 @@ export default function PersonalizedTaxPlanCard({
             boxShadow: shadows.sm,
           }}
         >
-          {hasFullAccess ? "Export Personalized Plan (PDF)" : "Unlock Plan Export"}
+          {hasFullAccess ? "Export Personalized Plan (PDF)" : "Unlock Full Plan + Export"}
         </button>
       </div>
+      {!hasFullAccess && (
+        <div style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>
+          You can keep exploring this preview. Upgrade only when you want the full timeline and PDF export.
+        </div>
+      )}
     </div>
   );
 }

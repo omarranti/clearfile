@@ -32,8 +32,31 @@ function Item({ icon: Icon, title, text, reduceMotion }) {
 
 export default function FreelanceTaxCalculator() {
   const reduceMotion = useReducedMotion();
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "How much should I set aside from freelance income?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A common starting range is 25 to 35 percent, then refine with your effective-rate estimate for your specific scenario.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "When are quarterly taxes due?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Quarterly estimated-tax windows are typically in April, June, September, and January, but always verify exact IRS and state dates for your filing year.",
+        },
+      },
+    ],
+  };
   return (
     <div style={{ fontFamily: font.sans, color: "#102a43", minHeight: "100vh", background: "#f5f9ff", padding: "104px 24px 100px" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <motion.div
           style={{ ...glass, borderRadius: 24, padding: "34px 30px", marginBottom: 18 }}

@@ -12,8 +12,31 @@ const glass = {
 
 export default function UnderstandYourTaxes() {
   const reduceMotion = useReducedMotion();
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Why did my refund change this year?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Refund changes usually come from income shifts, withholding differences, filing-status changes, or credit-eligibility updates.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is the fastest way to understand my taxes?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Start with effective rate, then bracket exposure, then likely credits and deductions.",
+        },
+      },
+    ],
+  };
   return (
     <div style={{ fontFamily: font.sans, color: "#102a43", minHeight: "100vh", background: "#f5f9ff", padding: "104px 24px 100px" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <motion.div
           style={{ ...glass, borderRadius: 24, padding: "34px 30px", marginBottom: 20 }}

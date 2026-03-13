@@ -13,6 +13,7 @@ import { supabase } from "../lib/supabase";
 import { claimEntitlement, getCheckoutStatus, loadEntitlement, startCheckout } from "../lib/billing";
 import PersonalizedTaxPlanCard from "../components/PersonalizedTaxPlanCard";
 import { buildPersonalizedTaxPlan } from "../lib/personalizedTaxPlan";
+import { markFunnelStep, stopFunnelTimer } from "../lib/funnelMetrics";
 
 /* ═══════════════════════════════════════════
    BRAND CONFIG
@@ -361,6 +362,10 @@ function Onboarding({ onDone }) {
   const [hasStudentLoans, setHasStudentLoans] = useState(false);
   const [hasRetirement, setHasRetirement] = useState(false);
   const [hasHDHP, setHasHDHP] = useState(false);
+  const quickPreview = useMemo(
+    () => fullCalc(income, status, deps, hasPenalty, 5, true, stateCode),
+    [income, status, deps, hasPenalty, stateCode]
+  );
 
   const stepMeta = [
     { h: "How much do you make?", p: "Drag to set your gross annual income." },
@@ -405,6 +410,25 @@ function Onboarding({ onDone }) {
                     style={{ position: "absolute", top: "50%", left: 0, transform: "translateY(-50%)", width: "100%", height: 40, WebkitAppearance: "none", appearance: "none", background: "transparent", outline: "none", cursor: "pointer", margin: 0 }} className="minimal-slider" />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.muted, fontWeight: 500 }}><span>$15K</span><span>$250K</span><span>$500K</span></div>
+                <div style={{ marginTop: 16, background: `${C.primary}08`, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.primary, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+                    Instant Preview
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted }}>Take-home</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{fmt(quickPreview.combined.takeHome)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted }}>Effective rate</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{pct(quickPreview.combined.effectiveRate)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: C.muted }}>Total tax</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{fmt(quickPreview.combined.totalTax)}</div>
+                    </div>
+                  </div>
+                </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 32 }}>
                   {["w2", "1099", "mixed"].map(t => (
                     <button key={t} onClick={() => setIncomeType(t)} style={{ flex: 1, padding: "14px 0", borderRadius: 12, border: `1px solid ${incomeType === t ? C.primary : C.border}`, background: incomeType === t ? `${C.primary}08` : C.surface, cursor: "pointer", fontSize: 15, fontWeight: 600, fontFamily: font.sans, color: incomeType === t ? C.primary : C.textSec, transition: "all 0.15s" }}>
@@ -509,6 +533,7 @@ export default function TaxedApp({ session }) {
   const [checkoutSessionId, setCheckoutSessionId] = useState(() => localStorage.getItem("taxed_checkout_session_id") || "");
   const [incomeWallShown, setIncomeWallShown] = useState(false);
   const reportRef = useRef(null);
+  const hasTrackedFirstReport = useRef(false);
   const userId = session?.user?.id;
 
   const r = useMemo(() => fullCalc(income, status, deps, hasPenalty, 5, true, stateCode), [income, status, deps, hasPenalty, stateCode]);
@@ -522,6 +547,7 @@ export default function TaxedApp({ session }) {
     setHasStudentLoans(Boolean(d.hasStudentLoans));
     setHasRetirement(Boolean(d.hasRetirement));
     setHasHDHP(Boolean(d.hasHDHP));
+    markFunnelStep("onboarding_completed", { stepCount: 3 });
     setBoarded(true);
   };
   const hasFullAccess = Boolean(entitlement?.full_access);
@@ -560,6 +586,13 @@ export default function TaxedApp({ session }) {
 
     loadLatestScenario();
   }, [userId, boarded]);
+
+  useEffect(() => {
+    if (!boarded || hasTrackedFirstReport.current) return;
+    hasTrackedFirstReport.current = true;
+    markFunnelStep("first_report_view");
+    stopFunnelTimer("landing_to_report", "time_to_first_report_view");
+  }, [boarded]);
 
   useEffect(() => {
     const syncEntitlement = async () => {
@@ -627,15 +660,6 @@ export default function TaxedApp({ session }) {
     };
     claim();
   }, [userId, checkoutSessionId]);
-
-  useEffect(() => {
-    if (hasFullAccess || incomeWallShown) return;
-    if (income > 50000) {
-      setIncomeWallShown(true);
-      setPaywallReason("income");
-      setPaywallOpen(true);
-    }
-  }, [income, hasFullAccess, incomeWallShown]);
 
   const iraSave = Math.round(5000 * r.fed.marginalRate);
   const hsaSave = Math.round(4150 * r.fed.marginalRate);
@@ -836,10 +860,23 @@ export default function TaxedApp({ session }) {
     setPaywallOpen(true);
   };
 
+  const handleDashboardIncomeChange = (nextIncome) => {
+    if (!hasFullAccess && nextIncome > 50000) {
+      setIncome(50000);
+      if (!incomeWallShown) {
+        setIncomeWallShown(true);
+        openPaywall("income");
+      }
+      return;
+    }
+    setIncome(nextIncome);
+  };
+
   const handleCheckout = async () => {
     try {
       setCheckoutLoading(true);
       setCheckoutNotice("");
+      markFunnelStep("checkout_started", { plan: selectedPlan === "monthly" ? "monthly" : "founders" });
       await startCheckout({
         plan: selectedPlan === "monthly" ? "pro" : "full",
         email: session?.user?.email || undefined,
@@ -957,7 +994,11 @@ export default function TaxedApp({ session }) {
       q: "Do these estimates include every possible tax detail?",
       content: (
         <>
-          <p>The model includes federal and California brackets, standard deductions, and common credits for educational planning.</p>
+          <p>
+            {stateCode === "CA"
+              ? "The model includes federal and California brackets, standard deductions, and common credits for educational planning."
+              : `The model includes federal bracket logic and directional ${stateLabel} planning assumptions, plus common credits for educational planning.`}
+          </p>
           <p style={{ marginTop: 8 }}>It may not include every local tax, phase-out edge case, or one-off item from your return. Use this to prepare better questions for your CPA, then confirm final filing numbers with them.</p>
         </>
       ),
@@ -1019,6 +1060,12 @@ export default function TaxedApp({ session }) {
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.15)", padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700, marginBottom: 14 }}>TAX CLARITY PLATFORM</div>
             <h1 style={{ fontFamily: font.sans, fontWeight: 800, fontSize: "clamp(24px, 5vw, 34px)", color: "#fff", lineHeight: 1.2, marginBottom: 4 }}>Your Tax Breakdown</h1>
             <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{fmt(income)} income · {statusLabel} · {stateLabel}</p>
+            {stateCode !== "CA" && (
+              <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.28)", borderRadius: 10, padding: "8px 10px", fontSize: 12, color: "#ecf6ff", lineHeight: 1.35 }}>
+                <AlertTriangle size={13} />
+                Non-CA state estimates are directional. For filing-accurate state math, validate with a CPA or state-specific calculator.
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -1028,7 +1075,7 @@ export default function TaxedApp({ session }) {
             <div style={{ marginTop: 16, position: "relative" }}>
               <div style={{ position: "relative", height: 12, background: C.border, borderRadius: 99 }}>
                 <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${sldPct}%`, background: `linear-gradient(90deg, ${C.info}, ${C.primary})`, borderRadius: 99, transition: "width 0.02s" }} />
-                <input type="range" min={15000} max={500000} step={500} value={income} onChange={e => setIncome(+e.target.value)} aria-label="Income"
+                <input type="range" min={15000} max={500000} step={500} value={income} onChange={e => handleDashboardIncomeChange(+e.target.value)} aria-label="Income"
                   style={{ position: "absolute", top: "50%", left: 0, transform: "translateY(-50%)", width: "100%", height: 32, WebkitAppearance: "none", appearance: "none", background: "transparent", outline: "none", cursor: "pointer", margin: 0 }} />
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 14, color: C.muted, fontWeight: 600 }}><span>$15K</span><span>$150K</span><span>$500K</span></div>

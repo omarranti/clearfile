@@ -63,6 +63,7 @@ function RouteHandler() {
     useEffect(() => {
         window.scrollTo(0, 0);
         const seo = SEO_MAP[pathname] || SEO_MAP["/"];
+        const ogImageUrl = `${window.location.origin}/og-image.png`;
         document.title = seo.title;
         
         let metaDesc = document.querySelector('meta[name="description"]');
@@ -71,9 +72,17 @@ function RouteHandler() {
         let ogTitle = document.querySelector('meta[property="og:title"]');
         let ogDesc = document.querySelector('meta[property="og:description"]');
         let ogUrl = document.querySelector('meta[property="og:url"]');
+        let ogImage = document.querySelector('meta[property="og:image"]');
+        let twitterTitle = document.querySelector('meta[name="twitter:title"]');
+        let twitterDesc = document.querySelector('meta[name="twitter:description"]');
+        let twitterImage = document.querySelector('meta[name="twitter:image"]');
         if (ogTitle) ogTitle.setAttribute("content", seo.title);
         if (ogDesc) ogDesc.setAttribute("content", seo.desc);
         if (ogUrl) ogUrl.setAttribute("content", window.location.href);
+        if (ogImage) ogImage.setAttribute("content", ogImageUrl);
+        if (twitterTitle) twitterTitle.setAttribute("content", seo.title);
+        if (twitterDesc) twitterDesc.setAttribute("content", seo.desc);
+        if (twitterImage) twitterImage.setAttribute("content", ogImageUrl);
 
         const canonicalHref = `${window.location.origin}${pathname}`;
         let canonical = document.querySelector('link[rel="canonical"]');

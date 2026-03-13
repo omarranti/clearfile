@@ -13,6 +13,7 @@ const glass = {
 };
 
 function ResourceCard({ icon: Icon, title, desc, link }) {
+  const isExternal = typeof link === "string" && /^https?:\/\//.test(link);
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }} style={{ ...glass, borderRadius: 20, padding: 24 }}
       whileHover={{ y: -2, boxShadow: "0 10px 24px rgba(16,42,67,0.08)" }}>
@@ -21,7 +22,13 @@ function ResourceCard({ icon: Icon, title, desc, link }) {
       </div>
       <h3 style={{ margin: "0 0 8px", color: "#102a43", fontSize: 17 }}>{title}</h3>
       <p style={{ margin: "0 0 12px", color: "#4f6478", lineHeight: 1.66, fontSize: 14 }}>{desc}</p>
-      <a href={link} className="micro-press" style={{ color: "#1f9d8b", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+      <a
+        href={link}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noreferrer" : undefined}
+        className="micro-press"
+        style={{ color: "#1f9d8b", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}
+      >
         Read Guide <ArrowRight size={14} />
       </a>
     </motion.div>
@@ -150,10 +157,10 @@ export default function Resources() {
             <h2 style={{ margin: 0, fontFamily: font.serif, fontSize: 28 }}>Essential Guides</h2>
           </div>
           <div className="resources-guides-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 16 }}>
-            <ResourceCard icon={AlertTriangle} title="First-Time Penalty Abatement" desc="Learn when the IRS may remove penalties and what to ask for." link="#" />
-            <ResourceCard icon={DollarSign} title="EITC Qualifications" desc="See common income thresholds and who may qualify for refundable credits." link="#" />
-            <ResourceCard icon={FileText} title="IRS Form 843 Guide" desc="Step-by-step walkthrough for filing a refund or abatement request." link="#" />
-            <ResourceCard icon={MessageSquare} title="Talking to the IRS" desc="Simple call scripts to reduce stress when you need support." link="#" />
+            <ResourceCard icon={AlertTriangle} title="First-Time Penalty Abatement" desc="Learn when the IRS may remove penalties and what to ask for." link="https://www.irs.gov/payments/penalty-relief" />
+            <ResourceCard icon={DollarSign} title="EITC Qualifications" desc="See common income thresholds and who may qualify for refundable credits." link="https://www.irs.gov/credits-deductions/individuals/earned-income-tax-credit" />
+            <ResourceCard icon={FileText} title="IRS Form 843 Guide" desc="Step-by-step walkthrough for filing a refund or abatement request." link="https://www.irs.gov/forms-pubs/about-form-843" />
+            <ResourceCard icon={MessageSquare} title="Talking to the IRS" desc="Simple call scripts to reduce stress when you need support." link="https://www.irs.gov/help/telephone-assistance" />
           </div>
         </motion.section>
 

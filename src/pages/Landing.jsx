@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ArrowRight, Briefcase, Laptop, PlusCircle, CheckCircle2, ChevronDown } from "lucide-react";
+import { markFunnelStep, startFunnelTimer } from "../lib/funnelMetrics";
 
 const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 const demoVideoSrc = `${import.meta.env.BASE_URL}media/model-demo.mp4`;
@@ -19,11 +20,11 @@ const smoothEase = [0.2, 0.9, 0.25, 1];
 const slamEase = [0.18, 0.85, 0.28, 1];
 const HERO_LINE_ONE = "You File Every Year...";
 const HERO_LINE_TWO = "You Still Don't Know Where the Money Went?";
-const TYPE_SPEED_MS = 34;
-const HOLD_ONE_MS = 420;
-const HOLD_TWO_MS = 520;
-const FADE_ONE_MS = 460;
-const SLAM_MS = 360;
+const TYPE_SPEED_MS = 22;
+const HOLD_ONE_MS = 180;
+const HOLD_TWO_MS = 220;
+const FADE_ONE_MS = 220;
+const SLAM_MS = 240;
 
 function WhoCard({ icon: Icon, title, text, reduceMotion }) {
   return (
@@ -123,6 +124,10 @@ export default function Landing() {
   const reveal = reduceMotion
     ? { initial: { opacity: 1, y: 0, filter: "blur(0px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0 } }
     : { initial: { opacity: 0, y: 18, filter: "blur(8px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0.75, ease: smoothEase } };
+  const trackCalculatorCta = (placement) => {
+    markFunnelStep("landing_cta_click", { placement });
+    startFunnelTimer("landing_to_report");
+  };
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -130,6 +135,10 @@ export default function Landing() {
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    markFunnelStep("landing_view");
   }, []);
 
   useEffect(() => {
@@ -250,11 +259,15 @@ export default function Landing() {
               </AnimatePresence>
             </div>
 
-            <div style={{ margin: "0 auto 26px", maxWidth: 800, minHeight: 72, visibility: reduceMotion || heroPhase === "done" || heroPhase === "demoReveal" ? "visible" : "hidden" }}>
+            <div style={{ margin: "0 auto 22px", maxWidth: 800, minHeight: 72, visibility: "visible" }}>
               <motion.p
                 initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8, filter: "blur(6px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ duration: reduceMotion ? 0 : 0.52, ease: smoothEase }}
+                animate={
+                  reduceMotion || heroPhase === "done" || heroPhase === "demoReveal" || heroPhase === "line2Typing" || heroPhase === "line2Hold" || heroPhase === "line2Slam"
+                    ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                    : { opacity: 0.78, y: 4, filter: "blur(2px)" }
+                }
+                transition={{ duration: reduceMotion ? 0 : 0.34, ease: smoothEase }}
                 style={{ margin: 0, color: "#495b6d", lineHeight: 1.78, fontSize: "clamp(16px, 1.5vw, 19px)" }}
               >
                 TurboTax files your return. Your CPA signs off. But neither one ever shows you the full picture - your brackets, your credits, your real take-home. Taxed does.
@@ -262,7 +275,7 @@ export default function Landing() {
             </div>
 
             <div className="hero-cta" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
-              <Link to="/calculator" className="micro-press hero-primary-cta" style={{ padding: "14px 24px", borderRadius: 999, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 8px 22px rgba(19,40,62,0.18)" }}>
+              <Link to="/calculator" onClick={() => trackCalculatorCta("hero_primary")} className="micro-press hero-primary-cta" style={{ padding: "14px 24px", borderRadius: 999, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 8px 22px rgba(19,40,62,0.18)" }}>
                 See Your Full Picture <ArrowRight size={16} />
               </Link>
             </div>
@@ -275,7 +288,7 @@ export default function Landing() {
             style={{ ...glass, borderRadius: 22, padding: 16, marginBottom: 16 }}
           >
             <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e2e7ed", background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)" }}>
-              <video src={demoVideoSrc} poster={demoPosterSrc} autoPlay loop muted playsInline preload="auto" style={{ width: "100%", display: "block", minHeight: 220, objectFit: "cover" }} />
+              <video src={demoVideoSrc} poster={demoPosterSrc} autoPlay loop muted playsInline preload="metadata" style={{ width: "100%", display: "block", minHeight: 220, objectFit: "cover" }} />
             </div>
           </motion.div>
 
@@ -300,7 +313,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section style={{ position: "relative", zIndex: 1, padding: "0 24px 40px" }}>
+      <section id="how-it-works" style={{ position: "relative", zIndex: 1, padding: "0 24px 40px", scrollMarginTop: 96 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", ...glass, borderRadius: 18, padding: "16px 18px", display: "grid", gap: 10 }}>
           {[
             {
@@ -398,7 +411,7 @@ export default function Landing() {
           </div>
 
           <div style={{ marginTop: 20 }}>
-            <Link to="/calculator" className="micro-press" style={{ padding: "14px 24px", borderRadius: 999, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 8px 22px rgba(19,40,62,0.16)" }}>
+            <Link to="/calculator" onClick={() => trackCalculatorCta("opportunity_section")} className="micro-press" style={{ padding: "14px 24px", borderRadius: 999, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 8px 22px rgba(19,40,62,0.16)" }}>
               See Your Full Picture <ArrowRight size={16} />
             </Link>
           </div>
@@ -442,7 +455,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/calculator" style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "rgba(16, 42, 67, 0.06)", color: "#102a43", textDecoration: "none", fontWeight: 700, transition: "background 0.2s" }}>
+              <Link to="/calculator" onClick={() => trackCalculatorCta("pricing_free")} style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "rgba(16, 42, 67, 0.06)", color: "#102a43", textDecoration: "none", fontWeight: 700, transition: "background 0.2s" }}>
                 Start Free
               </Link>
             </div>
@@ -474,7 +487,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/calculator" style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, transition: "background 0.2s", boxShadow: "0 10px 24px rgba(19,40,62,0.18)" }}>
+              <Link to="/calculator" onClick={() => trackCalculatorCta("pricing_founders")} style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, transition: "background 0.2s", boxShadow: "0 10px 24px rgba(19,40,62,0.18)" }}>
                 Unlock Full Access
               </Link>
             </div>

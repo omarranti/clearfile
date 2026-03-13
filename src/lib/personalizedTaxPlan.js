@@ -25,6 +25,7 @@ export function buildPersonalizedTaxPlan({
   filingStatusLabel = "Single",
   stateLabel = "California",
 }) {
+  const isCalifornia = stateLabel === "California";
   const top = opportunities[0];
   const secondary = opportunities[1];
   const estimatedTotal =
@@ -88,11 +89,12 @@ export function buildPersonalizedTaxPlan({
   return {
     title: "Personalized Tax Plan",
     subtitle: "A clear timeline based on your current scenario.",
-    assumptions:
-      "Estimates use current federal and California bracket logic in this tool, common credit eligibility rules, and your selected profile inputs.",
+    assumptions: isCalifornia
+      ? "Estimates use current federal and California bracket logic in this tool, common credit eligibility rules, and your selected profile inputs."
+      : `Estimates use current federal bracket logic and directional ${stateLabel} planning assumptions. State-specific results outside California should be validated with a state-specific calculator or CPA.`,
     sourceCues: [
       "IRS published bracket and deduction guidance",
-      "State tax rules as modeled in Taxed",
+      isCalifornia ? "California tax rules as modeled in Taxed" : "State estimate modeled directionally for planning",
       "Educational planning assumptions (not filing advice)",
     ],
     estimatedTotalImpact: fmtCurrency(estimatedTotal),
