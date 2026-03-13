@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ArrowRight, Briefcase, Laptop, PlusCircle, CheckCircle2 } from "lucide-react";
 
@@ -45,9 +45,16 @@ function ProblemParagraph({ children }) {
 
 export default function Landing() {
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [heroLineIdx, setHeroLineIdx] = useState(0);
   const reveal = reduceMotion
     ? { initial: { opacity: 1, y: 0, filter: "blur(0px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0 } }
     : { initial: { opacity: 0, y: 18, filter: "blur(8px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0.75, ease: smoothEase } };
+
+  const heroLines = [
+    "TurboTax files your return. Your CPA signs off.",
+    "Taxed shows your full picture - brackets, credits, real take-home.",
+    "Clarity first. Filing second. No more guessing.",
+  ];
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -56,6 +63,14 @@ export default function Landing() {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    if (reduceMotion) return undefined;
+    const timer = setInterval(() => {
+      setHeroLineIdx((n) => (n + 1) % heroLines.length);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, [reduceMotion, heroLines.length]);
 
   return (
     <div style={{ fontFamily: font.sans, background: "#f5f9ff", color: "#102a43", minHeight: "100vh", position: "relative" }}>
@@ -85,14 +100,46 @@ export default function Landing() {
               Tax Clarity Platform
             </div>
 
-            <h1 style={{ margin: "0 auto 18px", maxWidth: 980, fontFamily: font.serif, fontSize: "clamp(38px, 6.2vw, 78px)", lineHeight: 1.02, letterSpacing: "-0.03em" }}>
-              You File Every Year.
-              <br />
-              You Still Don&apos;t Know Where the Money Went.
-            </h1>
-            <p style={{ margin: "0 auto 30px", maxWidth: 840, color: "#43596e", lineHeight: 1.8, fontSize: "clamp(16px, 1.6vw, 20px)" }}>
-              TurboTax files your return. Your CPA signs off. But neither one ever shows you the full picture - your brackets, your credits, your real take-home. Taxed does.
-            </p>
+            <div style={{ margin: "0 auto 18px", maxWidth: 980 }}>
+              <motion.h1
+                initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.6, ease: smoothEase }}
+                style={{ margin: 0, fontFamily: font.serif, fontSize: "clamp(38px, 6.2vw, 78px)", lineHeight: 1.02, letterSpacing: "-0.03em" }}
+              >
+                <motion.span
+                  initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0 : 0.5, ease: smoothEase }}
+                  style={{ display: "block" }}
+                >
+                  You File Every Year.
+                </motion.span>
+                <motion.span
+                  initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  transition={{ duration: reduceMotion ? 0 : 0.55, delay: reduceMotion ? 0 : 0.12, ease: smoothEase }}
+                  style={{ display: "block" }}
+                >
+                  You Still Don&apos;t Know Where the Money Went.
+                </motion.span>
+              </motion.h1>
+            </div>
+
+            <div style={{ margin: "0 auto 30px", maxWidth: 840, minHeight: 72 }}>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={heroLineIdx}
+                  initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -6, filter: "blur(5px)" }}
+                  transition={{ duration: reduceMotion ? 0 : 0.46, ease: smoothEase }}
+                  style={{ margin: 0, color: "#43596e", lineHeight: 1.8, fontSize: "clamp(16px, 1.6vw, 20px)" }}
+                >
+                  {reduceMotion ? heroLines[0] : heroLines[heroLineIdx]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
 
             <div className="hero-cta" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
               <Link to="/calculator" className="micro-press" style={{ padding: "14px 24px", borderRadius: 999, background: "#1f9d8b", color: "#fff", textDecoration: "none", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(31,157,139,0.2)" }}>
