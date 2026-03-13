@@ -1,115 +1,166 @@
-import { json, readRawBody, stripe, stripePrices, supabaseAdmin } from "./_lib/clients.js";
+// api/stripe-webhook.js
+// Vercel serverless function — handles Stripe events
+// Deploy at: https://your-domain.com/api/stripe-webhook
 
-const planFromPrice = (priceId) => {
-  if (priceId === stripePrices.pro) return "pro";
-  return "full";
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const PRICE_TO_PLAN = {
+  [process.env.STRIPE_PRICE_FULL_MONTHLY]: 'full_access',
+  [process.env.STRIPE_PRICE_PRO_MONTHLY]: 'pro_ai',
 };
 
-const fromUnix = (v) => (v ? new Date(v * 1000).toISOString() : null);
+export const config = { api: { bodyParser: false } };
 
-const upsertEntitlementForUser = async (userId, plan, subscriptionId, status) => {
-  if (!userId) return;
-  const active = ["active", "trialing", "past_due"].includes(status || "");
-  await supabaseAdmin.from("billing_entitlements").upsert(
-    {
-      user_id: userId,
-      full_access: active,
-      pro_ai: active && plan === "pro",
-      status: active ? "active" : "inactive",
-      source_subscription_id: subscriptionId,
-    },
-    { onConflict: "user_id" }
-  );
-};
-
-const syncSubscriptionByStripeId = async (subscription) => {
-  const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
-  const priceId = subscription.items?.data?.[0]?.price?.id || "";
-  const plan = planFromPrice(priceId);
-
-  const customer = await stripe.customers.retrieve(customerId);
-  const email =
-    (typeof customer !== "string" && !customer.deleted ? customer.email : null) ||
-    subscription.metadata?.email ||
-    "";
-
-  const { data: customerRow } = await supabaseAdmin
-    .from("billing_customers")
-    .select("user_id")
-    .eq("stripe_customer_id", customerId)
-    .maybeSingle();
-
-  const userId = customerRow?.user_id || null;
-
-  await supabaseAdmin.from("billing_subscriptions").upsert(
-    {
-      stripe_subscription_id: subscription.id,
-      stripe_customer_id: customerId,
-      stripe_price_id: priceId,
-      plan_tier: plan,
-      status: subscription.status,
-      email: (email || "").toLowerCase(),
-      user_id: userId,
-      current_period_start: fromUnix(subscription.current_period_start),
-      current_period_end: fromUnix(subscription.current_period_end),
-      min_commitment_end: fromUnix(subscription.start_date ? subscription.start_date + 60 * 60 * 24 * 30 * 3 : null),
-    },
-    { onConflict: "stripe_subscription_id" }
-  );
-
-  if (email) {
-    await supabaseAdmin.from("billing_customers").upsert(
-      {
-        email: email.toLowerCase(),
-        stripe_customer_id: customerId,
-        user_id: userId,
-      },
-      { onConflict: "stripe_customer_id" }
-    );
-  }
-
-  await upsertEntitlementForUser(userId, plan, subscription.id, subscription.status);
-};
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const rawBody = await getRawBody(req);
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).json({ error: `Webhook error: ${err.message}` });
+  }
+
+  console.log(`Processing Stripe event: ${event.type}`);
 
   try {
-    const signature = req.headers["stripe-signature"];
-    if (!signature) return json(res, 400, { error: "Missing stripe-signature header" });
-
-    const rawBody = await readRawBody(req);
-    const event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
-
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      if (session.mode === "subscription" && session.subscription) {
-        const sub = await stripe.subscriptions.retrieve(session.subscription);
-        await syncSubscriptionByStripeId(sub);
-
-        const email = (session.customer_details?.email || session.customer_email || "").toLowerCase();
-        const plan = session.metadata?.plan_tier === "pro" ? "pro" : "full";
-        if (email) {
-          await supabaseAdmin.from("billing_guest_access").upsert(
-            {
-              stripe_checkout_session_id: session.id,
-              email,
-              plan_tier: plan,
-              status: "active",
-              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            },
-            { onConflict: "stripe_checkout_session_id" }
-          );
-        }
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        await handleCheckoutCompleted(session);
+        break;
       }
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        await handleSubscriptionUpdated(subscription);
+        break;
+      }
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+        await handleSubscriptionDeleted(subscription);
+        break;
+      }
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
 
-    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
-      await syncSubscriptionByStripeId(event.data.object);
-    }
-
-    return json(res, 200, { received: true });
-  } catch (error) {
-    return json(res, 400, { error: error.message || "Webhook processing failed" });
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    console.error('Webhook handler error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+// ── checkout.session.completed ──────────────────────────────
+async function handleCheckoutCompleted(session) {
+  const { customer, subscription: subscriptionId, customer_email } = session;
+
+  // Fetch full subscription from Stripe
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const priceId = subscription.items.data[0].price.id;
+  const plan = PRICE_TO_PLAN[priceId] || 'full_access';
+
+  // Try to find user by email
+  const { data: users } = await supabase.auth.admin.listUsers();
+  const matchedUser = users?.users?.find(
+    (u) => u.email?.toLowerCase() === customer_email?.toLowerCase()
+  );
+
+  if (matchedUser) {
+    // Authenticated user — upsert subscription directly
+    await upsertSubscription({
+      userId: matchedUser.id,
+      stripeCustomerId: customer,
+      stripeSubscriptionId: subscriptionId,
+      stripePriceId: priceId,
+      plan,
+      subscription,
+    });
+    console.log(`Linked subscription to user: ${matchedUser.id}`);
+  } else {
+    // Guest checkout — store as claimable purchase
+    await supabase.from('purchase_claims').upsert({
+      stripe_session_id: session.id,
+      stripe_customer_id: customer,
+      stripe_price_id: priceId,
+      plan,
+      email: customer_email,
+    });
+    console.log(`Stored guest purchase claim for: ${customer_email}`);
+  }
+}
+
+// ── customer.subscription.updated ──────────────────────────
+async function handleSubscriptionUpdated(subscription) {
+  const priceId = subscription.items.data[0].price.id;
+  const plan = PRICE_TO_PLAN[priceId] || 'full_access';
+
+  const { error } = await supabase
+    .from('subscriptions')
+    .update({
+      status: subscription.status,
+      stripe_price_id: priceId,
+      plan,
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_subscription_id', subscription.id);
+
+  if (error) console.error('Error updating subscription:', error);
+}
+
+// ── customer.subscription.deleted ──────────────────────────
+async function handleSubscriptionDeleted(subscription) {
+  const { error } = await supabase
+    .from('subscriptions')
+    .update({ status: 'canceled', updated_at: new Date().toISOString() })
+    .eq('stripe_subscription_id', subscription.id);
+
+  if (error) console.error('Error canceling subscription:', error);
+}
+
+// ── helpers ─────────────────────────────────────────────────
+async function upsertSubscription({ userId, stripeCustomerId, stripeSubscriptionId, stripePriceId, plan, subscription }) {
+  const { error } = await supabase.from('subscriptions').upsert({
+    user_id: userId,
+    stripe_customer_id: stripeCustomerId,
+    stripe_subscription_id: stripeSubscriptionId,
+    stripe_price_id: stripePriceId,
+    plan,
+    status: subscription.status,
+    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'stripe_subscription_id' });
+
+  if (error) throw error;
 }

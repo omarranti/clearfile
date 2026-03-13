@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const { plan, email, scenario } = req.body || {};
     if (!plan || !stripePrices[plan]) return json(res, 400, { error: "Invalid plan" });
 
-    const origin = req.headers.origin || process.env.PUBLIC_APP_URL || "http://localhost:5173";
+    const origin = req.headers.origin || process.env.VITE_APP_URL || process.env.PUBLIC_APP_URL || "http://localhost:5173";
     const successUrl = `${origin}/calculator?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/calculator?checkout=cancelled`;
 
