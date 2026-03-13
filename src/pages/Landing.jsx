@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, ShieldCheck, TrendingUp, Sparkles, FileText } from "lucide-react";
 
@@ -15,13 +15,16 @@ const glass = {
   WebkitBackdropFilter: "blur(16px)",
 };
 
+const smoothEase = [0.22, 1, 0.36, 1];
+
 function NarrativeStep({ icon: Icon, title, text }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 18, filter: "blur(6px)" }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.35 }}
+      transition={{ duration: 0.55, ease: smoothEase }}
+      whileHover={{ y: -3, boxShadow: "0 16px 30px rgba(16,42,67,0.12)" }}
       style={{ ...glass, borderRadius: 22, padding: 24 }}
     >
       <div style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(31,157,139,0.12)", display: "grid", placeItems: "center", marginBottom: 14 }}>
@@ -61,19 +64,19 @@ export default function Landing() {
       setPhase("questionBounce");
       return undefined;
     }
-    const timer = setTimeout(() => setTypedOneCount((n) => n + 1), 42);
+    const timer = setTimeout(() => setTypedOneCount((n) => n + 1), 34);
     return () => clearTimeout(timer);
   }, [phase, typedOneCount, reduceMotion]);
 
   useEffect(() => {
     if (reduceMotion || phase !== "questionBounce") return undefined;
-    const timer = setTimeout(() => setPhase("line1Fade"), 900);
+    const timer = setTimeout(() => setPhase("line1Fade"), 760);
     return () => clearTimeout(timer);
   }, [phase, reduceMotion]);
 
   useEffect(() => {
     if (reduceMotion || phase !== "line1Fade") return undefined;
-    const timer = setTimeout(() => setPhase("line2Typing"), 540);
+    const timer = setTimeout(() => setPhase("line2Typing"), 420);
     return () => clearTimeout(timer);
   }, [phase, reduceMotion]);
 
@@ -83,7 +86,7 @@ export default function Landing() {
       setPhase("done");
       return undefined;
     }
-    const timer = setTimeout(() => setTypedTwoCount((n) => n + 1), 36);
+    const timer = setTimeout(() => setTypedTwoCount((n) => n + 1), 30);
     return () => clearTimeout(timer);
   }, [phase, typedTwoCount, reduceMotion]);
 
@@ -95,8 +98,16 @@ export default function Landing() {
   return (
     <div style={{ fontFamily: font.sans, background: "#f5f9ff", color: "#102a43", minHeight: "100vh", position: "relative" }}>
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-18%", right: "-4%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(31,157,139,0.16), transparent 66%)", filter: "blur(48px)" }} />
-        <div style={{ position: "absolute", bottom: "-22%", left: "-12%", width: "54vw", height: "54vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.12), transparent 68%)", filter: "blur(48px)" }} />
+        <motion.div
+          animate={reduceMotion ? { x: 0, y: 0 } : { x: [0, -18, 0], y: [0, 14, 0] }}
+          transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
+          style={{ position: "absolute", top: "-18%", right: "-4%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(31,157,139,0.16), transparent 66%)", filter: "blur(48px)" }}
+        />
+        <motion.div
+          animate={reduceMotion ? { x: 0, y: 0 } : { x: [0, 16, 0], y: [0, -12, 0] }}
+          transition={{ duration: 16, ease: "easeInOut", repeat: Infinity }}
+          style={{ position: "absolute", bottom: "-22%", left: "-12%", width: "54vw", height: "54vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.12), transparent 68%)", filter: "blur(48px)" }}
+        />
       </div>
 
       <section className="hero-section" style={{ position: "relative", zIndex: 1, padding: "158px 24px 104px" }}>
@@ -105,61 +116,69 @@ export default function Landing() {
             Tax Education Platform
           </div>
 
-          <div style={{ minHeight: 182, display: "grid", placeItems: "center", marginBottom: 24 }}>
-            <motion.h1
-              initial={{ opacity: 0, y: 8 }}
-              animate={{
-                opacity: phase === "line1Fade" ? 0 : 1,
-                y: phase === "line1Fade" ? -8 : 0,
-              }}
-              transition={{ duration: 0.45 }}
-              style={{
-                margin: 0,
-                fontFamily: font.serif,
-                fontSize: "clamp(34px, 5.6vw, 64px)",
-                lineHeight: 1.08,
-                letterSpacing: "-0.025em",
-                maxWidth: 860,
-                display: phase === "line2Typing" || phase === "done" ? "none" : "block",
-              }}
-            >
-              {typedLineOne}
-              {showQuestionMark && (
-                <motion.span
-                  animate={phase === "questionBounce" ? { y: [0, -10, 0], scale: [1, 1.12, 1] } : { y: 0, scale: 1 }}
-                  transition={{ duration: 0.45, repeat: phase === "questionBounce" ? 1 : 0 }}
-                  style={{ color: "#1f9d8b", display: "inline-block" }}
+          <div style={{ minHeight: 190, display: "grid", placeItems: "center", marginBottom: 24 }}>
+            <AnimatePresence mode="wait">
+              {(phase !== "line2Typing" && phase !== "done") && (
+                <motion.h1
+                  key="headline-one"
+                  initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
+                  animate={{
+                    opacity: phase === "line1Fade" ? 0 : 1,
+                    y: phase === "line1Fade" ? -10 : 0,
+                    filter: phase === "line1Fade" ? "blur(8px)" : "blur(0px)",
+                  }}
+                  exit={{ opacity: 0, y: -10, filter: "blur(8px)" }}
+                  transition={{ duration: 0.55, ease: smoothEase }}
+                  style={{
+                    margin: 0,
+                    fontFamily: font.serif,
+                    fontSize: "clamp(34px, 5.6vw, 64px)",
+                    lineHeight: 1.08,
+                    letterSpacing: "-0.025em",
+                    maxWidth: 860,
+                  }}
                 >
-                  ?
-                </motion.span>
+                  {typedLineOne}
+                  {showQuestionMark && (
+                    <motion.span
+                      animate={phase === "questionBounce" ? { y: [0, -10, 0], scale: [1, 1.12, 1] } : { y: 0, scale: 1 }}
+                      transition={{ duration: 0.45, repeat: phase === "questionBounce" ? 1 : 0 }}
+                      style={{ color: "#1f9d8b", display: "inline-block" }}
+                    >
+                      ?
+                    </motion.span>
+                  )}
+                  <span className="cursor-blink" style={{ opacity: phase === "line1Typing" ? 1 : 0 }}>|</span>
+                </motion.h1>
               )}
-              <span className="cursor-blink" style={{ opacity: phase === "line1Typing" ? 1 : 0 }}>|</span>
-            </motion.h1>
 
-            {(phase === "line2Typing" || phase === "done") && (
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                style={{
-                  margin: 0,
-                  fontFamily: font.serif,
-                  fontSize: "clamp(32px, 5.2vw, 60px)",
-                  lineHeight: 1.1,
-                  letterSpacing: "-0.023em",
-                  maxWidth: 900,
-                }}
-              >
-                {typedLineTwo}
-                <span className="cursor-blink" style={{ opacity: phase === "line2Typing" ? 1 : 0 }}>|</span>
-              </motion.h1>
-            )}
+              {(phase === "line2Typing" || phase === "done") && (
+                <motion.h1
+                  key="headline-two"
+                  initial={{ opacity: 0, y: 16, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
+                  transition={{ duration: 0.65, ease: smoothEase }}
+                  style={{
+                    margin: 0,
+                    fontFamily: font.serif,
+                    fontSize: "clamp(32px, 5.2vw, 60px)",
+                    lineHeight: 1.1,
+                    letterSpacing: "-0.023em",
+                    maxWidth: 900,
+                  }}
+                >
+                  {typedLineTwo}
+                  <span className="cursor-blink" style={{ opacity: phase === "line2Typing" ? 1 : 0 }}>|</span>
+                </motion.h1>
+              )}
+            </AnimatePresence>
           </div>
 
           <motion.p
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: phase === "done" ? 1 : 0, y: phase === "done" ? 0 : 6 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.65, ease: smoothEase }}
             style={{ maxWidth: 660, margin: "0 auto 30px", color: "#4f6478", lineHeight: 1.74, fontSize: "clamp(16px, 1.95vw, 19px)" }}
           >
             Taxed gives you a clear, visual way to understand your taxes before deadlines sneak up on you.
@@ -169,7 +188,7 @@ export default function Landing() {
             className="hero-cta"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: phase === "done" ? 1 : 0, y: phase === "done" ? 0 : 6 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.72, delay: 0.04, ease: smoothEase }}
             style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}
           >
             <Link to="/calculator" className="micro-press" style={{ padding: "13px 24px", borderRadius: 999, background: "#1f9d8b", color: "#fff", textDecoration: "none", fontWeight: 650, display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(31,157,139,0.2)" }}>
@@ -230,6 +249,13 @@ export default function Landing() {
       </section>
 
       <style>{`
+        @media (hover: hover) {
+          .micro-press:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(16,42,67,0.14);
+          }
+        }
+
         .micro-press:active {
           transform: translateY(0.5px) scale(0.985);
         }
