@@ -4,11 +4,12 @@ import {
   ChevronDown, Send, MessageCircle, X, Check,
   DollarSign, TrendingDown, FileText, GraduationCap,
   AlertTriangle, ArrowRight, ArrowLeft, Download,
-  Calculator, Phone, Briefcase, Shield, PiggyBank, Heart,
+  Calculator, Phone, Briefcase, Shield, PiggyBank, Heart, CloudUpload,
   ChevronRight, Sparkles, Users, Home, User, ChevronsUpDown
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { supabase } from "../lib/supabase";
 
 /* ═══════════════════════════════════════════
    BRAND CONFIG
@@ -474,7 +475,7 @@ function Onboarding({ onDone }) {
 /* ═══════════════════════════════════════════
    MAIN APP
    ═══════════════════════════════════════════ */
-export default function TaxedApp() {
+export default function TaxedApp({ session }) {
   const [boarded, setBoarded] = useState(false);
   const [income, setIncome] = useState(50000);
   const [status, setStatus] = useState("single");
@@ -484,10 +485,44 @@ export default function TaxedApp() {
   const [bracketOpen, setBracketOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [actions, setActions] = useState({});
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudMessage, setCloudMessage] = useState("");
   const reportRef = useRef(null);
+  const userId = session?.user?.id;
 
   const r = useMemo(() => fullCalc(income, status, deps, hasPenalty, 5, true, stateCode), [income, status, deps, hasPenalty, stateCode]);
   const onBoard = (d) => { setIncome(d.income); setStatus(d.status); setDeps(d.deps); setStateCode(d.stateCode); setHasPenalty(d.hasPenalty); setBoarded(true); };
+
+  useEffect(() => {
+    const loadLatestScenario = async () => {
+      if (!userId || boarded) return;
+      const { data, error } = await supabase
+        .from("projects")
+        .select("payload")
+        .eq("user_id", userId)
+        .eq("name", "latest_scenario")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        return;
+      }
+
+      if (data?.payload) {
+        const p = data.payload;
+        setIncome(Number(p.income) || 50000);
+        setStatus(p.status || "single");
+        setDeps(Number(p.deps) || 0);
+        setStateCode(p.stateCode || "CA");
+        setHasPenalty(Boolean(p.hasPenalty));
+        setBoarded(true);
+        setCloudMessage("Loaded your last saved scenario.");
+      }
+    };
+
+    loadLatestScenario();
+  }, [userId, boarded]);
 
   if (!boarded) return <Onboarding onDone={onBoard} />;
 
@@ -508,6 +543,38 @@ export default function TaxedApp() {
     const pdfH = (canvas.height * pdfW) / canvas.width;
     pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
     pdf.save(`Taxed_Report_${stateCode}.pdf`);
+  };
+
+  const saveScenarioToCloud = async () => {
+    if (!userId) return;
+    setCloudLoading(true);
+    setCloudMessage("");
+    const payload = {
+      income,
+      status,
+      deps,
+      stateCode,
+      hasPenalty,
+      savedAt: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("projects")
+      .upsert(
+        {
+          user_id: userId,
+          name: "latest_scenario",
+          payload,
+        },
+        { onConflict: "user_id,name" }
+      );
+
+    if (error) {
+      setCloudMessage(`Save failed: ${error.message}`);
+    } else {
+      setCloudMessage("Saved to cloud.");
+    }
+    setCloudLoading(false);
   };
 
   const actionItems = [
@@ -531,7 +598,17 @@ export default function TaxedApp() {
             <button onClick={generatePDF} style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 99, fontSize: 14, fontWeight: 700, color: C.text, cursor: "pointer", boxShadow: shadow.sm, transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.boxShadow = shadow.md} onMouseOut={e => e.currentTarget.style.boxShadow = shadow.sm}>
               <Download size={14} /> Export PDF for CPA
             </button>
+            {userId && (
+              <button onClick={saveScenarioToCloud} disabled={cloudLoading} style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 99, fontSize: 14, fontWeight: 700, color: C.text, cursor: cloudLoading ? "wait" : "pointer", boxShadow: shadow.sm, transition: "all 0.2s", opacity: cloudLoading ? 0.75 : 1 }}>
+                <CloudUpload size={14} /> {cloudLoading ? "Saving..." : "Save to Cloud"}
+              </button>
+            )}
           </div>
+          {cloudMessage && (
+            <div style={{ marginBottom: 10, fontSize: 13, color: cloudMessage.startsWith("Save failed") ? C.danger : C.success }}>
+              {cloudMessage}
+            </div>
+          )}
           <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Tax Summary · {short(income)} · {stateLabel} · {statusLabel}</div>
           <h1 style={{ fontFamily: font.serif, fontSize: "clamp(30px, 5vw, 46px)", color: C.text, lineHeight: 1.12, marginBottom: 8 }}>Your Tax Situation,<br />Broken Down.</h1>
           <p style={{ color: C.textSec, fontSize: 15, lineHeight: 1.6 }}>Drag the slider — every number updates instantly</p>

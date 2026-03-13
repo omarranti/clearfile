@@ -89,7 +89,7 @@ export default function App() {
                 <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 64 }}>
                     <Routes>
                         <Route path="/" element={<Landing />} />
-                        <Route path="/calculator" element={session ? <Calculator /> : <Navigate to="/auth" replace />} />
+                        <Route path="/calculator" element={session ? <Calculator session={session} /> : <Navigate to="/auth" replace />} />
                         <Route path="/auth" element={<Auth session={session} />} />
                         <Route path="/resources" element={<Resources />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
