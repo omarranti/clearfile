@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -45,7 +45,7 @@ const SEO_MAP = {
     },
     "/understand-your-taxes": {
         title: "Understand Your Taxes - Finally See Where Your Money Goes",
-        desc: "TurboTax files your taxes. Taxed explains them. See exactly where your money goes - brackets, deductions, and credits in plain English. One-time $29.99."
+        desc: "TurboTax files your taxes. Taxed explains them. See exactly where your money goes - brackets, deductions, and credits in plain English. Unlock Full Access from $4.99/mo."
     },
     "/tax-calculator-take-home-pay": {
         title: "Tax Calculator: See Your Exact Take-Home Pay Before You Decide",
@@ -144,7 +144,7 @@ export default function App() {
                 <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 64 }}>
                     <Routes>
                         <Route path="/" element={<Landing />} />
-                        <Route path="/calculator" element={session ? <Calculator session={session} /> : <Navigate to="/auth" replace />} />
+                        <Route path="/calculator" element={<Calculator session={session} />} />
                         <Route path="/auth" element={<Auth session={session} />} />
                         <Route path="/admin" element={<Admin isAdmin={isAdmin} onAdminLogin={adminLogin} onAdminLogout={adminLogout} />} />
                         <Route path="/understand-your-taxes" element={<UnderstandYourTaxes />} />

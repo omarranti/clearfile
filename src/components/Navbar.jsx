@@ -118,7 +118,7 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
                             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 5px 18px rgba(31,157,139,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                             onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 3px 12px rgba(31,157,139,0.22)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                         >
-                            Log In / Sign Up
+                            Unlock / Sign In
                         </Link>
                     )}
                     {isAdmin && (
@@ -195,7 +195,7 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
                                 textAlign: 'center', fontSize: 15, fontWeight: 700, textDecoration: 'none',
                                 boxShadow: '0 4px 18px rgba(31,157,139,0.26)'
                             }}>
-                                Log In / Sign Up
+                                Unlock / Sign In
                             </Link>
                         )}
                         {isAdmin && (

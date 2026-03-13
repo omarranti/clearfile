@@ -392,7 +392,7 @@ export default function Landing() {
 
           <div style={{ marginTop: 24, ...glass, borderRadius: 16, padding: "16px 18px" }}>
             <p style={{ margin: 0, color: "#102a43", fontWeight: 700, fontSize: "clamp(16px, 1.6vw, 20px)", lineHeight: 1.5 }}>
-              One payment. <span style={{ color: "#1f9d8b" }}>$29.99.</span> Lifetime access. No subscription, no barrier, no excuse.
+              Start free. Unlock Full Access from <span style={{ color: "#1f9d8b" }}>$4.99/mo</span>. Upgrade to Pro + AI at $9.99/mo when you need deeper guidance.
             </p>
           </div>
 

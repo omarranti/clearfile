@@ -10,6 +10,7 @@ import {
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { supabase } from "../lib/supabase";
+import { claimEntitlement, getCheckoutStatus, loadEntitlement, startCheckout } from "../lib/billing";
 
 /* ═══════════════════════════════════════════
    BRAND CONFIG
@@ -241,7 +242,7 @@ function Brackets({ title, brackets, color, total, income }) {
   );
 }
 
-function SCard({ icon, name, value, vColor, desc, badge, bColor, delay = 0 }) {
+function SCard({ icon, name, value, vColor, desc, badge, bColor, delay = 0, locked = false, range = "", onUnlock }) {
   const bs = { green: { bg: `${C.success}10`, c: C.success, bd: `${C.success}25` }, amber: { bg: `${C.warning}10`, c: C.accentDark, bd: `${C.warning}25` }, blue: { bg: `${C.info}10`, c: C.info, bd: `${C.info}25` }, red: { bg: `${C.danger}10`, c: C.danger, bd: `${C.danger}25` }, gray: { bg: `${C.muted}12`, c: C.muted, bd: `${C.muted}25` }, purple: { bg: "#8B5CF610", c: "#8B5CF6", bd: "#8B5CF625" } }[bColor] || { bg: `${C.success}10`, c: C.success, bd: `${C.success}25` };
   return (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.35 }}
@@ -249,9 +250,21 @@ function SCard({ icon, name, value, vColor, desc, badge, bColor, delay = 0 }) {
       whileHover={{ y: -3, boxShadow: shadow.md }}>
       <div style={{ fontSize: 26, marginBottom: 10 }}>{icon}</div>
       <div style={{ fontFamily: font.serif, fontSize: 16, color: C.text, marginBottom: 3 }}>{name}</div>
-      <div style={{ fontFamily: font.mono, fontSize: 14, fontWeight: 600, color: vColor || C.primary, marginBottom: 10 }}>{value}</div>
-      <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.65, marginBottom: 12 }}>{desc}</div>
+      <div style={{ fontFamily: font.mono, fontSize: 14, fontWeight: 600, color: vColor || C.primary, marginBottom: 10 }}>
+        {locked ? (range || "Estimated opportunity") : value}
+      </div>
+      <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.65, marginBottom: 12, filter: locked ? "blur(1.5px)" : "none" }}>
+        {desc}
+      </div>
       {badge && <span style={{ display: "inline-block", fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "4px 11px", borderRadius: 99, background: bs.bg, color: bs.c, border: `1px solid ${bs.bd}` }}>{badge}</span>}
+      {locked && (
+        <button
+          onClick={onUnlock}
+          style={{ marginTop: 12, width: "100%", border: "none", borderRadius: 12, background: C.primary, color: "#fff", padding: "10px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+        >
+          Unlock details
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -283,7 +296,7 @@ function QA({ q, children, open: defaultOpen = false }) {
 /* ═══════════════════════════════════════════
    AI CHATBOT
    ═══════════════════════════════════════════ */
-function Chat({ result, isOpen, onClose }) {
+function Chat({ result, isOpen, onClose, teaser = false, onUpgrade, isPro = false, remainingFree = 0, onUse }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -332,11 +345,40 @@ RULES:
       const data = await res.json();
       const reply = data.content?.map(c => c.type === "text" ? c.text : "").join("") || "I'm having trouble connecting right now.";
       setMsgs(p => [...p, { role: "assistant", content: reply }]);
+      if (!isPro) onUse?.();
     } catch { setMsgs(p => [...p, { role: "assistant", content: "Connection issue — try again shortly." }]); }
     setLoading(false);
-  }, [input, loading, msgs, result]);
+  }, [input, loading, msgs, result, isPro, onUse]);
 
   if (!isOpen) return null;
+
+  if (teaser) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.96 }}
+        style={{ position: "fixed", bottom: 96, right: 16, width: "min(400px, calc(100vw - 32px))", background: "rgba(15,15,22,0.92)", border: `1px solid ${C.border}`, borderRadius: 20, zIndex: 999, boxShadow: "0 24px 80px rgba(0,0,0,0.6)", overflow: "hidden" }}>
+        <div style={{ padding: "14px 18px", background: "linear-gradient(135deg, #059669, #34D399)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>AI Scenario Assistant</div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.14)", border: "none", borderRadius: 8, padding: 5, cursor: "pointer", display: "flex" }}><X size={16} color="#fff" /></button>
+        </div>
+        <div style={{ padding: 16, background: C.bg }}>
+          <div style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, background: "#fff", color: C.textSec, fontSize: 13, lineHeight: 1.6 }}>
+            Based on your {fmt(result.income)} income and {result.filingStatus.replace("_", " ")} filing status, you should consider optimizing your pre-tax strategy and...
+          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: C.muted }}>Unlock the full personalized answer and unlimited scenario guidance in Pro + AI.</div>
+          {!isPro && (
+            <button onClick={onUpgrade} style={{ marginTop: 12, width: "100%", border: "none", borderRadius: 12, background: C.primary, color: "#fff", padding: "11px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+              Upgrade to Pro + AI ($9.99/mo)
+            </button>
+          )}
+          {!isPro && remainingFree > 0 && (
+            <div style={{ marginTop: 8, fontSize: 11, color: C.textSec }}>
+              You still have {remainingFree} free AI session{remainingFree === 1 ? "" : "s"} after Full Access unlock.
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.96 }}
@@ -493,11 +535,23 @@ export default function TaxedApp({ session }) {
   const [actions, setActions] = useState({});
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudMessage, setCloudMessage] = useState("");
+  const [entitlement, setEntitlement] = useState({ full_access: false, pro_ai: false, status: "inactive" });
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallReason, setPaywallReason] = useState("unlock");
+  const [selectedPlan, setSelectedPlan] = useState("full");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState("");
+  const [aiFreeUses, setAiFreeUses] = useState(() => Number(localStorage.getItem("taxed_ai_free_uses") || 0));
+  const [checkoutSessionId, setCheckoutSessionId] = useState(() => localStorage.getItem("taxed_checkout_session_id") || "");
+  const [incomeWallShown, setIncomeWallShown] = useState(false);
   const reportRef = useRef(null);
   const userId = session?.user?.id;
 
   const r = useMemo(() => fullCalc(income, status, deps, hasPenalty, 5, true, stateCode), [income, status, deps, hasPenalty, stateCode]);
   const onBoard = (d) => { setIncome(d.income); setStatus(d.status); setDeps(d.deps); setStateCode(d.stateCode); setHasPenalty(d.hasPenalty); setBoarded(true); };
+  const hasFullAccess = Boolean(entitlement?.full_access);
+  const hasProAI = Boolean(entitlement?.pro_ai);
+  const canUseAI = hasProAI || aiFreeUses < 2;
 
   useEffect(() => {
     const loadLatestScenario = async () => {
@@ -530,6 +584,80 @@ export default function TaxedApp({ session }) {
     loadLatestScenario();
   }, [userId, boarded]);
 
+  useEffect(() => {
+    const syncEntitlement = async () => {
+      if (!userId) {
+        setEntitlement({ full_access: false, pro_ai: false, status: "inactive" });
+        return;
+      }
+      const data = await loadEntitlement(userId);
+      if (data) setEntitlement(data);
+    };
+    syncEntitlement();
+  }, [userId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutState = params.get("checkout");
+    const sessionId = params.get("session_id");
+    if (!sessionId || checkoutState !== "success") return;
+
+    const verify = async () => {
+      try {
+        const data = await getCheckoutStatus(sessionId);
+        if (!data.active) return;
+        setEntitlement({
+          full_access: true,
+          pro_ai: data.plan === "pro",
+          status: "active",
+        });
+        localStorage.setItem("taxed_checkout_session_id", sessionId);
+        setCheckoutSessionId(sessionId);
+        setCheckoutNotice(
+          userId
+            ? "Payment confirmed. Your access is active."
+            : "Payment confirmed. Create or log into your account to protect your purchase."
+        );
+        if (data.plan === "pro") {
+          localStorage.setItem("taxed_ai_free_uses", "0");
+          setAiFreeUses(0);
+        }
+      } catch (error) {
+        setCheckoutNotice(error.message || "Could not verify checkout status.");
+      }
+    };
+
+    verify();
+  }, [userId]);
+
+  useEffect(() => {
+    const claim = async () => {
+      if (!userId || !checkoutSessionId) return;
+      try {
+        const result = await claimEntitlement(checkoutSessionId);
+        setEntitlement((prev) => ({
+          ...prev,
+          full_access: Boolean(result.full_access),
+          pro_ai: Boolean(result.pro_ai),
+          status: "active",
+        }));
+        setCheckoutNotice("Purchase linked to your account.");
+      } catch {
+        // Ignore silent claim failures; user can still continue with local unlock.
+      }
+    };
+    claim();
+  }, [userId, checkoutSessionId]);
+
+  useEffect(() => {
+    if (hasFullAccess || incomeWallShown) return;
+    if (income > 50000) {
+      setIncomeWallShown(true);
+      setPaywallReason("income");
+      setPaywallOpen(true);
+    }
+  }, [income, hasFullAccess, incomeWallShown]);
+
   if (!boarded) return <Onboarding onDone={onBoard} />;
 
   const sldPct = ((income - 15000) / (500000 - 15000)) * 100;
@@ -539,8 +667,69 @@ export default function TaxedApp({ session }) {
   const hsaSave = Math.round(4150 * r.fed.marginalRate);
   const maxSave = (hasPenalty && r.penalty ? r.penalty.ftaSavings : 0) + r.eitc.amount + iraSave;
   const toggleAction = (id) => setActions(p => ({ ...p, [id]: !p[id] }));
+  const opportunities = useMemo(() => {
+    const list = [
+      {
+        id: "eitc",
+        icon: "🏛️",
+        name: "Federal EITC",
+        value: r.eitc.eligible ? `Up to ${fmt(r.eitc.amount)}` : "Over income limit",
+        vColor: r.eitc.eligible ? C.success : C.muted,
+        desc: r.eitc.eligible
+          ? `At ${short(income)} you may qualify for ${fmt(r.eitc.amount)}. It's refundable.`
+          : `At ${short(income)} you appear above the typical threshold.`,
+        badge: r.eitc.eligible ? "Refundable" : "Over Limit",
+        bColor: r.eitc.eligible ? "green" : "gray",
+        estimate: r.eitc.amount,
+        range: r.eitc.eligible ? `${fmt(Math.max(150, Math.round(r.eitc.amount * 0.65)))}-${fmt(Math.max(250, r.eitc.amount))}` : "$200-$800",
+      },
+      {
+        id: "ira",
+        icon: "📦",
+        name: "Traditional IRA",
+        value: "Up to $7,000/yr",
+        vColor: C.info,
+        desc: `A $5K IRA at ${short(income)} saves ≈${fmt(iraSave)} in federal tax.`,
+        badge: "Pre-Tax",
+        bColor: "blue",
+        estimate: iraSave,
+        range: `${fmt(Math.max(200, Math.round(iraSave * 0.6)))}-${fmt(Math.max(500, iraSave + 200))}`,
+      },
+      {
+        id: "hsa",
+        icon: "🏥",
+        name: "HSA",
+        value: "Up to $4,150/yr",
+        vColor: C.accentDark,
+        desc: `Full HSA at ${short(income)} saves ≈${fmt(hsaSave)} in federal tax.`,
+        badge: "Triple Tax Advantage",
+        bColor: "amber",
+        estimate: hsaSave,
+        range: `${fmt(Math.max(150, Math.round(hsaSave * 0.6)))}-${fmt(Math.max(350, hsaSave + 150))}`,
+      },
+      {
+        id: "cal",
+        icon: "🌱",
+        name: "CA CalEITC",
+        value: r.calEitc.eligible ? `Eligible (~${fmt(r.calEitc.amount)})` : "Not eligible",
+        vColor: r.calEitc.eligible ? C.success : C.muted,
+        desc: r.calEitc.eligible ? "Under the CA income limit for this credit." : "Likely above the state income cutoff.",
+        badge: r.calEitc.eligible ? "State Credit" : "Income Too High",
+        bColor: r.calEitc.eligible ? "green" : "gray",
+        estimate: r.calEitc.amount,
+        range: r.calEitc.eligible ? `${fmt(100)}-${fmt(Math.max(220, r.calEitc.amount))}` : "$120-$420",
+      },
+    ];
+    return list.sort((a, b) => b.estimate - a.estimate);
+  }, [r.eitc.amount, r.eitc.eligible, income, iraSave, hsaSave, r.calEitc.eligible, r.calEitc.amount]);
+  const primaryOpportunity = opportunities[0];
+  const lockedOpportunities = opportunities.slice(1, 4);
 
   const generatePDF = async () => {
+    if (!hasFullAccess) {
+      openPaywall("export");
+      return;
+    }
     if (!reportRef.current) return;
     const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: C.bg });
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
@@ -581,6 +770,27 @@ export default function TaxedApp({ session }) {
       setCloudMessage("Saved to cloud.");
     }
     setCloudLoading(false);
+  };
+
+  const openPaywall = (reason = "unlock") => {
+    if (hasFullAccess) return;
+    setPaywallReason(reason);
+    setPaywallOpen(true);
+  };
+
+  const handleCheckout = async () => {
+    try {
+      setCheckoutLoading(true);
+      setCheckoutNotice("");
+      await startCheckout({
+        plan: selectedPlan,
+        email: session?.user?.email || undefined,
+        scenario: { income, filingStatus: status, dependents: deps, stateCode },
+      });
+    } catch (error) {
+      setCheckoutNotice(error.message || "Unable to start checkout right now.");
+      setCheckoutLoading(false);
+    }
   };
 
   const actionItems = [
@@ -739,16 +949,52 @@ export default function TaxedApp({ session }) {
           </div>
         </motion.div>
 
-        <Sect>Savings & Credits — All Options</Sect>
+        <Sect>Savings & Credits — Opportunity Map</Sect>
+        <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 14, color: C.text, fontWeight: 700 }}>We found {opportunities.length} opportunities in your profile.</div>
+          {!hasFullAccess && (
+            <div style={{ fontSize: 12, color: C.muted }}>
+              Full diagnostic is free. Unlock full prescriptions from <strong style={{ color: C.text }}>$4.99/mo</strong>.
+            </div>
+          )}
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 265px), 1fr))", gap: 14 }}>
-          <SCard icon="🏛️" name="Federal EITC" delay={0.05} value={r.eitc.eligible ? `Up to ${fmt(r.eitc.amount)}` : `Over limit at ${short(income)}`} vColor={r.eitc.eligible ? C.success : C.muted} desc={r.eitc.eligible ? `At ${short(income)} you may qualify for ${fmt(r.eitc.amount)}. It's refundable.` : `At ${short(income)} (${deps === 0 ? "no kids" : deps + " kid" + (deps > 1 ? "s" : "")}) you're above the cutoff.`} badge={r.eitc.eligible ? "Refundable" : "Over Limit"} bColor={r.eitc.eligible ? "green" : "gray"} />
-          {hasPenalty && <SCard icon="⚠️" name="FTA Penalty Waiver" delay={0.08} value={r.penalty ? fmt(r.penalty.ftaSavings) + " saved" : "$0"} vColor={C.danger} desc="First-Time Abatement removes your penalty. Clean 3-year history required." badge="One-Time Use" bColor="green" />}
-          <SCard icon="📦" name="Traditional IRA" delay={0.11} value="Up to $7,000/yr" vColor={C.info} desc={`A $5K IRA at ${short(income)} saves ≈${fmt(iraSave)} federal tax. Deadline: April 15.`} badge="Pre-Tax" bColor="blue" />
-          <SCard icon="🏥" name="HSA" delay={0.14} value="Up to $4,150/yr" vColor={C.accentDark} desc={`Full HSA at ${short(income)} saves ≈${fmt(hsaSave)} federal. Requires HDHP.`} badge="Triple Tax Advantage" bColor="amber" />
-          <SCard icon="🎓" name="Student Loan Interest" delay={0.17} value="Up to $2,500" vColor="#8B5CF6" desc={`Above-the-line deduction. At ${short(income)} you're under the $75K phase-out.`} badge="Above-the-Line" bColor="purple" />
-          <SCard icon="🌱" name="CA CalEITC" delay={0.2} value={r.calEitc.eligible ? `Eligible (~${fmt(r.calEitc.amount)})` : `Not eligible at ${short(income)}`} vColor={r.calEitc.eligible ? C.success : C.muted} desc={r.calEitc.eligible ? "Under the $22,302 CA limit." : `CalEITC cuts off at $22,302.`} badge={r.calEitc.eligible ? "State Credit" : "Income Too High"} bColor={r.calEitc.eligible ? "green" : "gray"} />
-          <SCard icon="💼" name="Self-Employment Deductions" delay={0.23} value="Varies" vColor={C.info} desc="If 1099: home office, phone, software, mileage — all deductible." badge="If Self-Employed" bColor="blue" />
-          <SCard icon="📱" name="Saver's Credit" delay={0.26} value={r.savers.eligible ? `${fmtP(r.savers.rate)} credit` : "Over income limit"} vColor={r.savers.eligible ? C.accentDark : C.muted} desc={r.savers.eligible ? `$2K IRA earns extra ${fmt(r.savers.maxCredit)} credit.` : `Above the $36,500 limit.`} badge={r.savers.eligible ? "Non-Refundable" : "Over Limit"} bColor={r.savers.eligible ? "amber" : "gray"} />
+          {primaryOpportunity && (
+            <SCard
+              icon={primaryOpportunity.icon}
+              name={`${primaryOpportunity.name} (Revealed)`}
+              delay={0.05}
+              value={primaryOpportunity.value}
+              vColor={primaryOpportunity.vColor}
+              desc={primaryOpportunity.desc}
+              badge={primaryOpportunity.badge}
+              bColor={primaryOpportunity.bColor}
+            />
+          )}
+          {lockedOpportunities.map((item, idx) => (
+            <SCard
+              key={item.id}
+              icon={item.icon}
+              name={item.name}
+              delay={0.08 + idx * 0.03}
+              value={item.value}
+              vColor={item.vColor}
+              desc={item.desc}
+              badge={item.badge}
+              bColor={item.bColor}
+              locked={!hasFullAccess}
+              range={item.range}
+              onUnlock={() => openPaywall("credits")}
+            />
+          ))}
+          {hasFullAccess && (
+            <>
+              {hasPenalty && <SCard icon="⚠️" name="FTA Penalty Waiver" delay={0.2} value={r.penalty ? fmt(r.penalty.ftaSavings) + " saved" : "$0"} vColor={C.danger} desc="First-Time Abatement removes your penalty. Clean 3-year history required." badge="One-Time Use" bColor="green" />}
+              <SCard icon="🎓" name="Student Loan Interest" delay={0.23} value="Up to $2,500" vColor="#8B5CF6" desc={`Above-the-line deduction. At ${short(income)} you're under the $75K phase-out.`} badge="Above-the-Line" bColor="purple" />
+              <SCard icon="💼" name="Self-Employment Deductions" delay={0.26} value="Varies" vColor={C.info} desc="If 1099: home office, phone, software, mileage — all deductible." badge="If Self-Employed" bColor="blue" />
+              <SCard icon="📱" name="Saver's Credit" delay={0.29} value={r.savers.eligible ? `${fmtP(r.savers.rate)} credit` : "Over income limit"} vColor={r.savers.eligible ? C.accentDark : C.muted} desc={r.savers.eligible ? `$2K IRA earns extra ${fmt(r.savers.maxCredit)} credit.` : `Above the $36,500 limit.`} badge={r.savers.eligible ? "Non-Refundable" : "Over Limit"} bColor={r.savers.eligible ? "amber" : "gray"} />
+            </>
+          )}
         </div>
 
         <div style={{ height: 1, background: C.border, margin: "44px 0" }} />
@@ -800,14 +1046,114 @@ export default function TaxedApp({ session }) {
         <div style={{ marginTop: 40, padding: "14px 18px", background: `${C.primary}04`, border: `1px solid ${C.primary}10`, borderRadius: 12, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
           <strong style={{ color: C.textSec }}>Disclaimer:</strong> {DISCLAIMER}
         </div>
+        {!userId && checkoutSessionId && (
+          <div style={{ marginTop: 14, padding: "12px 14px", background: `${C.warning}10`, border: `1px solid ${C.warning}30`, borderRadius: 12, fontSize: 13, color: C.textSec }}>
+            Payment detected. To protect your purchase across devices, create or log in to your account from the top-right <strong style={{ color: C.text }}>Log In / Sign Up</strong> button.
+          </div>
+        )}
+        {checkoutNotice && (
+          <div style={{ marginTop: 12, fontSize: 13, color: checkoutNotice.toLowerCase().includes("could not") ? C.danger : C.success }}>
+            {checkoutNotice}
+          </div>
+        )}
       </div>
+
+      <AnimatePresence>
+        {paywallOpen && !hasFullAccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(10,18,28,0.55)", backdropFilter: "blur(4px)", zIndex: 1100, display: "grid", placeItems: "center", padding: 14 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              style={{ width: "min(860px, 100%)", background: "#fff", borderRadius: 20, border: `1px solid ${C.border}`, boxShadow: shadow.md, padding: "22px 22px 18px" }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.primary, textTransform: "uppercase", letterSpacing: "0.08em" }}>Full X-Ray Unlocked</div>
+                  <h3 style={{ margin: "6px 0 0", fontFamily: font.serif, fontSize: 30, color: C.text }}>Unlock your full tax prescription</h3>
+                </div>
+                <button onClick={() => setPaywallOpen(false)} style={{ border: "none", background: C.bg, width: 36, height: 36, borderRadius: 10, cursor: "pointer" }}>
+                  <X size={18} color={C.textSec} />
+                </button>
+              </div>
+              <p style={{ margin: "8px 0 16px", fontSize: 14, color: C.textSec, lineHeight: 1.65 }}>
+                {paywallReason === "income" && "You crossed into advanced planning territory. Your diagnostic stays free; detailed recommendations are part of Full Access."}
+                {paywallReason === "credits" && "We found additional opportunities in your profile. Unlock card-level guidance and exact math behind each one."}
+                {paywallReason === "export" && "Exporting your CPA pack is included in Full Access and Pro + AI."}
+                {paywallReason === "ai" && "Your AI answer is personalized to this scenario. Unlock Full Access, then upgrade to Pro + AI for unlimited sessions."}
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 12 }}>
+                <button onClick={() => setSelectedPlan("full")} style={{ textAlign: "left", borderRadius: 14, border: `2px solid ${selectedPlan === "full" ? C.primary : C.border}`, background: selectedPlan === "full" ? `${C.primary}08` : "#fff", padding: 14, cursor: "pointer" }}>
+                  <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Full Access</div>
+                  <div style={{ fontFamily: font.serif, color: C.text, fontSize: 28, margin: "2px 0" }}>$4.99<span style={{ fontSize: 15, color: C.muted }}>/mo</span></div>
+                  <div style={{ fontSize: 12, color: C.textSec }}>Full opportunity cards, exports, and complete recommendation details.</div>
+                </button>
+                <button onClick={() => setSelectedPlan("pro")} style={{ textAlign: "left", borderRadius: 14, border: `2px solid ${selectedPlan === "pro" ? C.primary : C.border}`, background: selectedPlan === "pro" ? `${C.primary}08` : "#fff", padding: 14, cursor: "pointer" }}>
+                  <div style={{ fontSize: 12, color: C.muted, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>Pro + AI</div>
+                  <div style={{ fontFamily: font.serif, color: C.text, fontSize: 28, margin: "2px 0" }}>$9.99<span style={{ fontSize: 15, color: C.muted }}>/mo</span></div>
+                  <div style={{ fontSize: 12, color: C.textSec }}>Everything in Full Access plus unlimited personalized AI sessions.</div>
+                </button>
+              </div>
+
+              <div style={{ marginTop: 12, fontSize: 12, color: C.muted }}>
+                3-month minimum commitment applies. Cancel anytime after the minimum term.
+              </div>
+              {primaryOpportunity && (
+                <div style={{ marginTop: 10, fontSize: 13, color: C.textSec }}>
+                  Example from your profile: <strong style={{ color: C.text }}>{primaryOpportunity.name}</strong> shows meaningful savings potential.
+                </div>
+              )}
+              {checkoutNotice && <div style={{ marginTop: 10, fontSize: 12, color: C.danger }}>{checkoutNotice}</div>}
+
+              <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  style={{ border: "none", borderRadius: 12, background: C.primary, color: "#fff", fontSize: 14, fontWeight: 700, padding: "12px 16px", cursor: checkoutLoading ? "wait" : "pointer" }}
+                >
+                  {checkoutLoading ? "Starting checkout..." : `Unlock ${selectedPlan === "pro" ? "Pro + AI" : "Full Access"}`}
+                </button>
+                <button onClick={() => setPaywallOpen(false)} style={{ border: `1px solid ${C.border}`, borderRadius: 12, background: "#fff", color: C.textSec, fontSize: 14, fontWeight: 700, padding: "12px 16px", cursor: "pointer" }}>
+                  Keep exploring free diagnostic
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.button onClick={() => setChatOpen(!chatOpen)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}
         style={{ position: "fixed", bottom: 22, right: 16, width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(135deg, ${C.primary}, ${C.primaryLight})`, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 20px ${C.primary}40`, zIndex: 1000 }}
         aria-label={chatOpen ? "Close chat" : "Open tax assistant"}>
         {chatOpen ? <X size={20} color="#fff" /> : <MessageCircle size={20} color="#fff" />}
       </motion.button>
-      <AnimatePresence>{chatOpen && <Chat result={r} isOpen={chatOpen} onClose={() => setChatOpen(false)} />}</AnimatePresence>
+      <AnimatePresence>
+        {chatOpen && (
+          <Chat
+            result={r}
+            isOpen={chatOpen}
+            onClose={() => setChatOpen(false)}
+            teaser={!hasFullAccess || (!hasProAI && !canUseAI)}
+            isPro={hasProAI}
+            remainingFree={Math.max(0, 2 - aiFreeUses)}
+            onUse={() => {
+              const next = aiFreeUses + 1;
+              setAiFreeUses(next);
+              localStorage.setItem("taxed_ai_free_uses", String(next));
+            }}
+            onUpgrade={() => {
+              setSelectedPlan("pro");
+              openPaywall("ai");
+            }}
+          />
+        )}
+      </AnimatePresence>
       <style>{`
         @media (max-width: 768px) {
           .calculator-page { padding-bottom: 92px !important; }
