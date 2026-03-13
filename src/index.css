@@ -37,30 +37,36 @@ input[type=range] {
   background: transparent;
 }
 
-input[type=range]::-webkit-slider-thumb {
+input[type=range].minimal-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
-  box-shadow: 0 0 0 4px rgba(31,157,139,0.25), 0 3px 12px rgba(26,26,46,0.18);
-  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-input[type=range]::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 0 6px rgba(31,157,139,0.3), 0 4px 16px rgba(26,26,46,0.22);
-  transform: scale(1.1);
+input[type=range].minimal-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
 }
 
-input[type=range]::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+input[type=range].minimal-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #fff;
+  background: #ffffff;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 0 4px rgba(31,157,139,0.25), 0 3px 12px rgba(26,26,46,0.18);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+input[type=range].minimal-slider::-moz-range-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
 }
 
 select {
