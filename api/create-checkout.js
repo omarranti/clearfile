@@ -1,14 +1,16 @@
-// api/create-checkout.js
-// POST /api/create-checkout  { plan: 'full_access' | 'pro_ai', email?, success_url, cancel_url }
-
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const PLAN_TO_PRICE = {
   full_access: process.env.STRIPE_PRICE_FULL_MONTHLY,
+  full: process.env.STRIPE_PRICE_FULL_MONTHLY,
   pro_ai: process.env.STRIPE_PRICE_PRO_MONTHLY,
+  pro: process.env.STRIPE_PRICE_PRO_MONTHLY,
+  monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
 };
+
+const ONE_TIME_PLANS = new Set(["full_access", "full"]);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -25,21 +27,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Unknown plan: ${plan}` });
   }
 
+  const isOneTime = ONE_TIME_PLANS.has(plan);
+
   try {
     const sessionParams = {
-      mode: 'subscription',
+      mode: isOneTime ? 'payment' : 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
       success_url,
       cancel_url,
-      // 3-month minimum via subscription schedule or just metadata note
-      subscription_data: {
-        metadata: { plan, min_months: '3' },
-      },
       metadata: { plan },
       allow_promotion_codes: true,
     };
 
-    // Pre-fill email if we have it (guest with known email, or logged-in user)
+    if (!isOneTime) {
+      sessionParams.subscription_data = {
+        metadata: { plan },
+      };
+    }
+
     if (email) {
       sessionParams.customer_email = email;
     }

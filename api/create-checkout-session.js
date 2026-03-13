@@ -8,12 +8,13 @@ export default async function handler(req, res) {
     const { plan, email, scenario } = req.body || {};
     if (!plan || !stripePrices[plan]) return json(res, 400, { error: "Invalid plan" });
 
-    const origin = req.headers.origin || process.env.VITE_APP_URL || process.env.PUBLIC_APP_URL || "http://localhost:5173";
+    const origin = req.headers.origin || process.env.VITE_APP_URL || "http://localhost:5173";
     const successUrl = `${origin}/calculator?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/calculator?checkout=cancelled`;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
+    const isLifetime = plan === "full";
+    const sessionParams = {
+      mode: isLifetime ? "payment" : "subscription",
       line_items: [{ price: stripePrices[plan], quantity: 1 }],
       customer_email: email || undefined,
       success_url: successUrl,
@@ -24,14 +25,15 @@ export default async function handler(req, res) {
         income: String(scenario?.income ?? ""),
         filing_status: String(scenario?.filingStatus ?? ""),
       },
-      subscription_data: {
-        metadata: {
-          plan_tier: plan,
-          min_commitment_months: "3",
-        },
-      },
-    });
+    };
 
+    if (!isLifetime) {
+      sessionParams.subscription_data = {
+        metadata: { plan_tier: plan },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     return json(res, 200, { id: session.id, url: session.url });
   } catch (error) {
     return json(res, 500, { error: error.message || "Checkout session failed" });
