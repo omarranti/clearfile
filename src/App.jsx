@@ -1,5 +1,5 @@
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
@@ -7,6 +7,8 @@ import Calculator from './pages/Calculator';
 import Resources from './pages/Resources';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import Auth from './pages/Auth';
+import { supabase } from './lib/supabase';
 
 const SEO_MAP = {
     "/": {
@@ -28,6 +30,10 @@ const SEO_MAP = {
     "/terms": {
         title: "Terms of Service | Taxed",
         desc: "Taxed Terms of Service. Taxed is an educational tool, not tax advice or a filing service."
+    },
+    "/auth": {
+        title: "Sign In | Taxed",
+        desc: "Create or access your Taxed account to save tax scenarios and progress."
     }
 };
 
@@ -52,15 +58,39 @@ function RouteHandler() {
 }
 
 export default function App() {
+    const [session, setSession] = useState(null);
+
+    useEffect(() => {
+        let mounted = true;
+
+        supabase.auth.getSession().then(({ data }) => {
+            if (mounted) setSession(data.session ?? null);
+        });
+
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+            setSession(nextSession ?? null);
+        });
+
+        return () => {
+            mounted = false;
+            listener.subscription.unsubscribe();
+        };
+    }, []);
+
+    const signOut = async () => {
+        await supabase.auth.signOut();
+    };
+
     return (
         <Router>
             <RouteHandler />
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'transparent' }}>
-                <Navbar />
+                <Navbar session={session} onSignOut={signOut} />
                 <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 64 }}>
                     <Routes>
                         <Route path="/" element={<Landing />} />
-                        <Route path="/calculator" element={<Calculator />} />
+                        <Route path="/calculator" element={session ? <Calculator /> : <Navigate to="/auth" replace />} />
+                        <Route path="/auth" element={<Auth session={session} />} />
                         <Route path="/resources" element={<Resources />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/terms" element={<TermsOfService />} />

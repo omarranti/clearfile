@@ -11,7 +11,7 @@ const glass = {
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
 };
 
-export default function Navbar() {
+export default function Navbar({ session, onSignOut }) {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [logoError, setLogoError] = useState(false);
@@ -90,19 +90,35 @@ export default function Navbar() {
                             {l.name}
                         </Link>
                     ))}
-                    <Link to="/calculator" style={{
-                        marginLeft: 8,
-                        padding: "10px 20px", borderRadius: 99,
-                        background: '#34D399', color: "#000",
-                        fontSize: 13, fontWeight: 700, textDecoration: 'none',
-                        boxShadow: '0 4px 20px rgba(52,211,153,0.35)',
-                        transition: 'all 0.2s', display: 'inline-block', whiteSpace: 'nowrap'
-                    }}
-                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 28px rgba(52,211,153,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(52,211,153,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                    >
-                        Get Full Access — $29.99
-                    </Link>
+                    {session ? (
+                        <button
+                            onClick={onSignOut}
+                            style={{
+                                marginLeft: 8,
+                                padding: "10px 18px", borderRadius: 99,
+                                background: 'rgba(255,255,255,0.08)', color: "#fff",
+                                border: '1px solid rgba(255,255,255,0.16)',
+                                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                transition: 'all 0.2s', display: 'inline-block', whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Log Out
+                        </button>
+                    ) : (
+                        <Link to="/auth" style={{
+                            marginLeft: 8,
+                            padding: "10px 20px", borderRadius: 99,
+                            background: '#34D399', color: "#000",
+                            fontSize: 13, fontWeight: 700, textDecoration: 'none',
+                            boxShadow: '0 4px 20px rgba(52,211,153,0.35)',
+                            transition: 'all 0.2s', display: 'inline-block', whiteSpace: 'nowrap'
+                        }}
+                            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 28px rgba(52,211,153,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(52,211,153,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                        >
+                            Log In / Sign Up
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile toggle */}
@@ -141,14 +157,28 @@ export default function Navbar() {
                                 {l.name}
                             </Link>
                         ))}
-                        <Link to="/calculator" onClick={() => setIsOpen(false)} style={{
-                            marginTop: 8, padding: "16px", borderRadius: 14,
-                            background: '#34D399', color: "#000",
-                            textAlign: 'center', fontSize: 15, fontWeight: 700, textDecoration: 'none',
-                            boxShadow: '0 4px 20px rgba(52,211,153,0.35)'
-                        }}>
-                            Get Full Access — $29.99
-                        </Link>
+                        {session ? (
+                            <button
+                                onClick={async () => { setIsOpen(false); await onSignOut(); }}
+                                style={{
+                                    marginTop: 8, padding: "16px", borderRadius: 14,
+                                    background: 'rgba(255,255,255,0.08)', color: "#fff",
+                                    border: '1px solid rgba(255,255,255,0.16)',
+                                    textAlign: 'center', fontSize: 15, fontWeight: 700, cursor: 'pointer'
+                                }}
+                            >
+                                Log Out
+                            </button>
+                        ) : (
+                            <Link to="/auth" onClick={() => setIsOpen(false)} style={{
+                                marginTop: 8, padding: "16px", borderRadius: 14,
+                                background: '#34D399', color: "#000",
+                                textAlign: 'center', fontSize: 15, fontWeight: 700, textDecoration: 'none',
+                                boxShadow: '0 4px 20px rgba(52,211,153,0.35)'
+                            }}>
+                                Log In / Sign Up
+                            </Link>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
