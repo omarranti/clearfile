@@ -781,7 +781,7 @@ export default function TaxedApp({ session }) {
     { id: "ira", text: <>Open a <strong style={{ color: C.text }}>Traditional IRA before April 15</strong> — even $2K saves ≈{fmt(Math.round(2000 * r.fed.marginalRate))} in federal tax.</> },
   ];
 
-  const dynamicQAs = useMemo(() => {
+  const dynamicQAs = (() => {
     const faqs = [];
 
     if (hasPenalty) {
@@ -912,16 +912,7 @@ export default function TaxedApp({ session }) {
     });
 
     return faqs;
-  }, [
-    hasPenalty,
-    incomeType,
-    hasStudentLoans,
-    hasRetirement,
-    hasHDHP,
-    deps,
-    stateCode,
-    stateLabel,
-  ]);
+  })();
 
   return (
     <div className="calculator-page" style={{ minHeight: "100vh", background: C.bg, fontFamily: font.sans, paddingBottom: 120 }}>
