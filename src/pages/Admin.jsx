@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ShieldCheck, Lock, LogOut } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 const card = {
   background: "rgba(255,255,255,0.72)",
@@ -9,6 +10,7 @@ const card = {
 };
 
 export default function Admin({ isAdmin, onAdminLogin, onAdminLogout }) {
+  const reduceMotion = useReducedMotion();
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
 
@@ -25,7 +27,12 @@ export default function Admin({ isAdmin, onAdminLogin, onAdminLogout }) {
 
   return (
     <div style={{ minHeight: "calc(100vh - 64px)", padding: "54px 16px 100px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ ...card, width: "100%", maxWidth: 460, borderRadius: 24, padding: 30 }}>
+      <motion.div
+        style={{ ...card, width: "100%", maxWidth: 460, borderRadius: 24, padding: 30 }}
+        initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 16, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: reduceMotion ? 0 : 0.55 }}
+      >
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ width: 44, height: 44, margin: "0 auto 12px", borderRadius: 12, background: "rgba(31,157,139,0.12)", display: "grid", placeItems: "center" }}>
             <ShieldCheck size={20} color="#1f9d8b" />
@@ -103,7 +110,7 @@ export default function Admin({ isAdmin, onAdminLogin, onAdminLogout }) {
             {error && <p style={{ margin: 0, color: "#dc2626", fontSize: 13 }}>{error}</p>}
           </form>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

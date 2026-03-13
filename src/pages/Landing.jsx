@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { ArrowRight, Briefcase, Laptop, PlusCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Briefcase, Laptop, PlusCircle, CheckCircle2, ChevronDown } from "lucide-react";
 
 const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 const demoVideoSrc = `${import.meta.env.BASE_URL}media/model-demo.mp4`;
@@ -51,11 +51,74 @@ function ProblemParagraph({ children }) {
   );
 }
 
+function RevealText({ children, reduceMotion, delay = 0 }) {
+  return (
+    <motion.p
+      initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 10, filter: "blur(6px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: reduceMotion ? 0 : 0.52, delay: reduceMotion ? 0 : delay, ease: smoothEase }}
+      style={{ margin: 0, color: "#3f5469", lineHeight: 1.86, fontSize: "clamp(15px, 1.4vw, 18px)" }}
+    >
+      {children}
+    </motion.p>
+  );
+}
+
+function ExpandableTab({ item, open, onToggle, reduceMotion }) {
+  return (
+    <div style={{ border: "1px solid #d8e3f0", borderRadius: 14, overflow: "hidden", background: "rgba(255,255,255,0.72)" }}>
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={`tab-panel-${item.id}`}
+        style={{
+          width: "100%",
+          border: "none",
+          background: "transparent",
+          padding: "14px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>{item.title}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: reduceMotion ? 0 : 0.2 }}>
+          <ChevronDown size={16} color="#1f9d8b" />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={`tab-panel-${item.id}`}
+            initial={reduceMotion ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={reduceMotion ? { opacity: 1, height: 0 } : { opacity: 0, height: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.28, ease: smoothEase }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ borderTop: "1px solid #d8e3f0", padding: "12px 16px 14px" }}>
+              <p style={{ margin: "0 0 10px", color: "#4f6478", fontSize: 14, lineHeight: 1.7 }}>{item.detail}</p>
+              <Link to={item.href} className="micro-press" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>
+                Open page <ArrowRight size={14} style={{ verticalAlign: "text-bottom" }} />
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [heroPhase, setHeroPhase] = useState("line1Typing");
   const [line1Count, setLine1Count] = useState(0);
   const [line2Count, setLine2Count] = useState(0);
+  const [expandedTabId, setExpandedTabId] = useState("understand");
   const reveal = reduceMotion
     ? { initial: { opacity: 1, y: 0, filter: "blur(0px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0 } }
     : { initial: { opacity: 0, y: 18, filter: "blur(8px)" }, whileInView: { opacity: 1, y: 0, filter: "blur(0px)" }, transition: { duration: 0.75, ease: smoothEase } };
@@ -237,16 +300,35 @@ export default function Landing() {
       </section>
 
       <section style={{ position: "relative", zIndex: 1, padding: "0 24px 40px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", ...glass, borderRadius: 18, padding: "16px 18px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-          <Link to="/understand-your-taxes" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
-            Understand Your Taxes
-          </Link>
-          <Link to="/tax-calculator-take-home-pay" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
-            Tax Calculator Take-Home Pay
-          </Link>
-          <Link to="/freelance-tax-calculator" className="micro-press" style={{ textDecoration: "none", color: "#1f9d8b", fontWeight: 700, fontSize: 14 }}>
-            Freelance Tax Calculator
-          </Link>
+        <div style={{ maxWidth: 1100, margin: "0 auto", ...glass, borderRadius: 18, padding: "16px 18px", display: "grid", gap: 10 }}>
+          {[
+            {
+              id: "understand",
+              title: "Understand Your Taxes",
+              detail: "A plain-English breakdown of where your paycheck goes and why outcomes change year to year.",
+              href: "/understand-your-taxes",
+            },
+            {
+              id: "takehome",
+              title: "Tax Calculator Take-Home Pay",
+              detail: "Preview real take-home impact before raises, bonuses, or job changes so you decide with confidence.",
+              href: "/tax-calculator-take-home-pay",
+            },
+            {
+              id: "freelance",
+              title: "Freelance Tax Calculator",
+              detail: "Model 1099 income, estimate quarterly set-asides, and reduce surprise tax bills before deadlines.",
+              href: "/freelance-tax-calculator",
+            },
+          ].map((item) => (
+            <ExpandableTab
+              key={item.id}
+              item={item}
+              open={expandedTabId === item.id}
+              reduceMotion={reduceMotion}
+              onToggle={() => setExpandedTabId((prev) => (prev === item.id ? "" : item.id))}
+            />
+          ))}
         </div>
       </section>
 
@@ -267,15 +349,15 @@ export default function Landing() {
           </h2>
 
           <div style={{ display: "grid", gap: 16 }}>
-            <ProblemParagraph>
+            <RevealText reduceMotion={reduceMotion} delay={0}>
               Here&apos;s the part nobody says out loud: the confusion you feel every April is not an accident. Filing software walks you through a wizard, then spits out a number. You submit and move on, still not knowing why you owed more, why your refund dropped, or what changed.
-            </ProblemParagraph>
-            <ProblemParagraph>
+            </RevealText>
+            <RevealText reduceMotion={reduceMotion} delay={0.08}>
               That&apos;s not a you problem. That&apos;s a design problem. TurboTax built a great filing tool. CPAs built a great advice business. But between “click here to file” and “$350/hr to ask a question,” the layer that actually shows your money in plain English never got built.
-            </ProblemParagraph>
-            <ProblemParagraph>
+            </RevealText>
+            <RevealText reduceMotion={reduceMotion} delay={0.16}>
               The result is predictable: you miss credits you qualify for, you get surprise penalties without context, and you take on new income without understanding the tax impact until it&apos;s too late. Every year repeats the same cycle - file, pay, move on, still confused.
-            </ProblemParagraph>
+            </RevealText>
           </div>
         </motion.div>
       </section>
@@ -297,15 +379,15 @@ export default function Landing() {
           </h2>
 
           <div style={{ display: "grid", gap: 16 }}>
-            <ProblemParagraph>
+            <RevealText reduceMotion={reduceMotion} delay={0}>
               Taxed is not a filing tool and not a CPA. It&apos;s the layer that was always supposed to exist between the two: a visual, plain-English platform that shows exactly where your money goes in real time.
-            </ProblemParagraph>
-            <ProblemParagraph>
+            </RevealText>
+            <RevealText reduceMotion={reduceMotion} delay={0.08}>
               Enter your income, choose filing status, and instantly see your federal + state picture: effective rate, bracket exposure, eligible credits, and penalty risk before it becomes a bill. No jargon. No wizard. No waiting until April.
-            </ProblemParagraph>
-            <ProblemParagraph>
+            </RevealText>
+            <RevealText reduceMotion={reduceMotion} delay={0.16}>
               When you can finally see the full picture, you make better decisions year-round - negotiating raises, planning freelance work, and walking into CPA meetings informed instead of uncertain.
-            </ProblemParagraph>
+            </RevealText>
           </div>
 
           <div style={{ marginTop: 24, ...glass, borderRadius: 16, padding: "16px 18px" }}>

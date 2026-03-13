@@ -262,13 +262,19 @@ function FStep({ n, title, desc }) {
 
 function QA({ q, children, open: defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
+  const panelId = `qa-panel-${q.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, overflow: "hidden", boxShadow: shadow.sm }}>
-      <button onClick={() => setOpen(!open)} style={{ width: "100%", padding: "20px 24px", fontSize: 16, fontWeight: 600, color: C.text, background: "none", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textAlign: "left", fontFamily: font.sans }}>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        style={{ width: "100%", padding: "20px 24px", fontSize: 16, fontWeight: 600, color: C.text, background: "none", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textAlign: "left", fontFamily: font.sans }}
+      >
         {q}<motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={18} color={C.primary} /></motion.div>
       </button>
       <AnimatePresence>
-        {open && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: "hidden" }}><div style={{ padding: "0 22px 22px", borderTop: `1px solid ${C.border}`, paddingTop: 16, fontSize: 14, color: C.textSec, lineHeight: 1.75 }}>{children}</div></motion.div>)}
+        {open && (<motion.div id={panelId} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: "hidden" }}><div style={{ padding: "0 22px 22px", borderTop: `1px solid ${C.border}`, paddingTop: 16, fontSize: 14, color: C.textSec, lineHeight: 1.75 }}>{children}</div></motion.div>)}
       </AnimatePresence>
     </div>
   );
@@ -765,6 +771,14 @@ export default function TaxedApp({ session }) {
             <p><strong style={{ color: C.success }}>Green flags:</strong> Proactive before deadlines, plain-English explanations, mentions credits unprompted, owns mistakes.</p>
             <p style={{ marginTop: 8 }}><strong style={{ color: C.danger }}>Red flags:</strong> Only contacts you at tax time, won't fix their errors, never mentioned EITC/IRA.</p>
             <p style={{ marginTop: 8 }}><strong>Find one:</strong> CPAverify.org, NATP.org. Expect $200–$400.</p>
+          </QA>
+          <QA q="Do these estimates include every possible tax detail?">
+            <p>The model includes federal and California brackets, standard deductions, and common credits for educational planning.</p>
+            <p style={{ marginTop: 8 }}>It may not include every local tax, phase-out edge case, or one-off item from your return. Use this to prepare better questions for your CPA, then confirm final filing numbers with them.</p>
+          </QA>
+          <QA q="What should I do if my income changes mid-year?">
+            <p>Re-run your scenario each time income shifts (raise, bonus, freelance project) and compare your new effective rate + take-home.</p>
+            <p style={{ marginTop: 8 }}>If estimated tax owed jumps, set aside part of each paycheck/invoice immediately to avoid end-of-year surprises.</p>
           </QA>
         </div>
 

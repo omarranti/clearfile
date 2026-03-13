@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
-import { FileText, Calendar, BookOpen, AlertTriangle, MessageSquare, Database, ArrowRight, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { FileText, Calendar, BookOpen, AlertTriangle, MessageSquare, Database, ArrowRight, DollarSign, ChevronDown } from "lucide-react";
 
 const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 
@@ -28,6 +29,8 @@ function ResourceCard({ icon: Icon, title, desc, link }) {
 }
 
 export default function Resources() {
+  const reduceMotion = useReducedMotion();
+  const [openTab, setOpenTab] = useState("understand");
   return (
     <div className="resources-page" style={{ fontFamily: font.sans, background: "#f5f9ff", minHeight: "100vh", padding: "94px 24px 132px", position: "relative", color: "#102a43" }}>
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
@@ -35,6 +38,11 @@ export default function Resources() {
       </div>
 
       <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        <motion.div
+          initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 16, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: reduceMotion ? 0 : 0.55 }}
+        >
         <div style={{ textAlign: "center", marginBottom: 54 }}>
           <div style={{ ...glass, borderRadius: 999, display: "inline-flex", padding: "7px 14px", color: "#1f9d8b", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
             Resource Hub
@@ -46,15 +54,64 @@ export default function Resources() {
             Plain-English guides, trusted links, and deadlines that help you stay ahead.
           </p>
         </div>
+        </motion.div>
 
-        <section style={{ marginBottom: 60 }}>
+        <motion.section initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 14, filter: "blur(5px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true }} transition={{ duration: reduceMotion ? 0 : 0.5 }} style={{ marginBottom: 60 }}>
           <div style={{ ...glass, borderRadius: 16, padding: "14px 16px", marginBottom: 18, display: "grid", gap: 8 }}>
             <div style={{ color: "#102a43", fontWeight: 700, fontSize: 13 }}>Popular tax clarity pages</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <Link to="/understand-your-taxes" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Understand Your Taxes</Link>
-              <Link to="/tax-calculator-take-home-pay" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Take-Home Pay Calculator</Link>
-              <Link to="/freelance-tax-calculator" style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 13 }}>Freelance Tax Calculator</Link>
-            </div>
+            {[
+              {
+                id: "understand",
+                title: "Understand Your Taxes",
+                desc: "Learn why your refund changes, how effective rate works, and what actually impacts your total bill.",
+                href: "/understand-your-taxes",
+              },
+              {
+                id: "takehome",
+                title: "Take-Home Pay Calculator",
+                desc: "Model raises and side income before committing to decisions so your net pay is predictable.",
+                href: "/tax-calculator-take-home-pay",
+              },
+              {
+                id: "freelance",
+                title: "Freelance Tax Calculator",
+                desc: "Estimate what to set aside per invoice and lower underpayment risk across the year.",
+                href: "/freelance-tax-calculator",
+              },
+            ].map((item) => (
+              <div key={item.id} style={{ border: "1px solid #d8e3f0", borderRadius: 12, overflow: "hidden", background: "rgba(255,255,255,0.72)" }}>
+                <button
+                  onClick={() => setOpenTab((prev) => (prev === item.id ? "" : item.id))}
+                  aria-expanded={openTab === item.id}
+                  aria-controls={`resources-tab-${item.id}`}
+                  style={{ width: "100%", border: "none", background: "transparent", textAlign: "left", padding: "10px 12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}
+                >
+                  <span style={{ color: "#1f9d8b", fontWeight: 700, fontSize: 13 }}>{item.title}</span>
+                  <motion.span animate={{ rotate: openTab === item.id ? 180 : 0 }} transition={{ duration: reduceMotion ? 0 : 0.18 }}>
+                    <ChevronDown size={14} color="#1f9d8b" />
+                  </motion.span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {openTab === item.id && (
+                    <motion.div
+                      id={`resources-tab-${item.id}`}
+                      initial={reduceMotion ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={reduceMotion ? { opacity: 1, height: 0 } : { opacity: 0, height: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.22 }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <div style={{ borderTop: "1px solid #d8e3f0", padding: "10px 12px 12px" }}>
+                        <p style={{ margin: "0 0 8px", color: "#4f6478", fontSize: 13, lineHeight: 1.6 }}>{item.desc}</p>
+                        <Link to={item.href} style={{ color: "#1f9d8b", textDecoration: "none", fontWeight: 700, fontSize: 12 }}>
+                          Open page <ArrowRight size={13} style={{ verticalAlign: "text-bottom" }} />
+                        </Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(31,157,139,0.12)", display: "grid", placeItems: "center" }}>
@@ -83,9 +140,9 @@ export default function Resources() {
               </ul>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section style={{ marginBottom: 60 }}>
+        <motion.section initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 14, filter: "blur(5px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true }} transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.04 }} style={{ marginBottom: 60 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59,130,246,0.12)", display: "grid", placeItems: "center" }}>
               <BookOpen size={18} color="#3b82f6" />
@@ -98,9 +155,9 @@ export default function Resources() {
             <ResourceCard icon={FileText} title="IRS Form 843 Guide" desc="Step-by-step walkthrough for filing a refund or abatement request." link="#" />
             <ResourceCard icon={MessageSquare} title="Talking to the IRS" desc="Simple call scripts to reduce stress when you need support." link="#" />
           </div>
-        </section>
+        </motion.section>
 
-        <section>
+        <motion.section initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 14, filter: "blur(5px)" }} whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }} viewport={{ once: true }} transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.06 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(245,158,11,0.12)", display: "grid", placeItems: "center" }}>
               <Calendar size={18} color="#f59e0b" />
@@ -122,7 +179,7 @@ export default function Resources() {
               </div>
             ))}
           </div>
-        </section>
+        </motion.section>
       </div>
 
       <style>{`

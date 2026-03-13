@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
 import { supabase } from "../lib/supabase";
 
 const card = {
@@ -21,6 +22,7 @@ const inputStyle = {
 };
 
 export default function Auth({ session }) {
+  const reduceMotion = useReducedMotion();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +61,12 @@ export default function Auth({ session }) {
 
   return (
     <div style={{ minHeight: "calc(100vh - 64px)", padding: "52px 16px 100px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ ...card, width: "100%", maxWidth: 460, borderRadius: 24, padding: 30 }}>
+      <motion.div
+        initial={reduceMotion ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 18, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: reduceMotion ? 0 : 0.55 }}
+        style={{ ...card, width: "100%", maxWidth: 460, borderRadius: 24, padding: 30 }}
+      >
         <div style={{ marginBottom: 20, textAlign: "center" }}>
           <h1 style={{ margin: 0, fontSize: 30, color: "#102a43", lineHeight: 1.12, letterSpacing: "-0.01em" }}>Welcome to Taxed HQ</h1>
           <p style={{ margin: "10px 0 0", color: "#4f6478", fontSize: 14, lineHeight: 1.65 }}>
@@ -112,7 +119,7 @@ export default function Auth({ session }) {
           </button>
           <Link to="/" style={{ color: "#4f6478", textDecoration: "none", fontSize: 13 }}>Back to home</Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
