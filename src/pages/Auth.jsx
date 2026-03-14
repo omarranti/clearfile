@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { supabase } from "../lib/supabase";
@@ -29,6 +29,13 @@ export default function Auth({ session }) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [showAdminShortcut, setShowAdminShortcut] = useState(() => {
+    try {
+      return sessionStorage.getItem("taxed_show_admin_shortcut") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   if (session) return <Navigate to="/calculator" replace />;
 
@@ -58,6 +65,22 @@ export default function Auth({ session }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (mode !== "login") return undefined;
+    const onKeyDown = (event) => {
+      if (event.altKey && event.shiftKey && event.key.toLowerCase() === "a") {
+        setShowAdminShortcut(true);
+        try {
+          sessionStorage.setItem("taxed_show_admin_shortcut", "1");
+        } catch {
+          // ignore storage errors
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mode]);
 
   return (
     <div style={{ minHeight: "calc(100vh - 64px)", padding: "52px 16px 100px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -117,7 +140,14 @@ export default function Auth({ session }) {
           <button onClick={() => setMode(mode === "login" ? "signup" : "login")} style={{ background: "none", border: "none", color: "#1f9d8b", cursor: "pointer", padding: 0, fontSize: 13, fontWeight: 600 }}>
             {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
           </button>
-          <Link to="/" style={{ color: "#4f6478", textDecoration: "none", fontSize: 13 }}>Back to home</Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {mode === "login" && showAdminShortcut && (
+              <Link to="/admin" style={{ color: "#7f8b98", textDecoration: "none", fontSize: 12 }}>
+                Admin login
+              </Link>
+            )}
+            <Link to="/" style={{ color: "#4f6478", textDecoration: "none", fontSize: 13 }}>Back to home</Link>
+          </div>
         </div>
       </motion.div>
     </div>

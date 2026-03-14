@@ -30,10 +30,9 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
         { name: "How it Works", path: "/#how-it-works" },
         { name: "Tax Navigator", path: "/calculator" },
         { name: "Resource Hub", path: "/resources" },
-        { name: "Admin", path: "/admin" },
     ];
 
-    const isActive = (path) => path === '/calculator' || path === '/resources' || path === '/admin'
+    const isActive = (path) => path === '/calculator' || path === '/resources'
         ? location.pathname === path
         : false;
 

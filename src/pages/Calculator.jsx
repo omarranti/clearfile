@@ -419,7 +419,7 @@ function Onboarding({ onDone, initialData }) {
                     </div>
                     <div>
                       <div style={{ fontSize: 11, color: C.muted }}>Effective rate</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{pct(quickPreview.combined.effectiveRate)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{fmtP(quickPreview.combined.effectiveRate)}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 11, color: C.muted }}>Total tax</div>
@@ -649,7 +649,6 @@ export default function TaxedApp({ session }) {
           );
           if (data.plan === "pro") {
             localStorage.setItem("taxed_ai_free_uses", "0");
-            setAiFreeUses(0);
           }
         } catch (error) {
           setCheckoutNotice(error.message || "Could not verify checkout status.");

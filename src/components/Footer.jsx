@@ -134,7 +134,7 @@ export default function Footer() {
                     <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#1f9d8b', marginBottom: 20 }}>Resources</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {[
-                            { label: 'Tax Deadlines 2024', path: '/resources' },
+                            { label: 'Tax Deadlines', path: '/resources' },
                             { label: 'IRS Form Guides', path: '/resources' },
                             { label: 'Find a CPA', path: '/resources' },
                         ].map((item, i) => (

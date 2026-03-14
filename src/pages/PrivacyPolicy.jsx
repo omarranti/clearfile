@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: `${C.primary}10`, borderRadius: 99, color: C.primary, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 20 }}><ShieldCheck size={14} /> Legal</div>
                     <h1 style={{ fontFamily: font.serif, fontSize: 'clamp(32px, 5vw, 48px)', color: C.text, marginBottom: 16 }}>Privacy Policy</h1>
                     <p style={{ fontSize: 15, color: C.muted }}>Effective Date: March 11, 2025 · Last Updated: March 12, 2026</p>
-                    <p style={{ fontSize: 15, color: C.textSec, marginTop: 12, lineHeight: 1.7 }}>This Privacy Policy describes how Taxed ("we," "us," or "our") collects, uses, and protects information when you visit and use <strong>taxed.tax</strong> (the "Service"). This policy is compliant with applicable U.S. federal and state privacy laws, including the California Consumer Privacy Act (CCPA) and the California Privacy Rights Act (CPRA).</p>
+                    <p style={{ fontSize: 15, color: C.textSec, marginTop: 12, lineHeight: 1.7 }}>This Privacy Policy describes how Taxed ("we," "us," or "our") collects, uses, and protects information when you visit and use <strong>taxedhq.com</strong> (the "Service"). This policy is compliant with applicable U.S. federal and state privacy laws, including the California Consumer Privacy Act (CCPA) and the California Privacy Rights Act (CPRA).</p>
                 </motion.div>
             </div>
             <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 24px 0' }}>
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
                     <div style={{ marginTop: 12, padding: '16px 20px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, fontSize: 14 }}>
                         <strong>Taxed</strong><br />
                         Email: <a href="mailto:privacy@taxedhq.com" style={{ color: C.primary }}>privacy@taxedhq.com</a><br />
-                        Website: <a href="https://taxed.tax" style={{ color: C.primary }}>taxed.tax</a>
+                        Website: <a href="https://taxedhq.com" style={{ color: C.primary }}>taxedhq.com</a>
                     </div>
                 </Section>
                 <div style={{ marginTop: 40, display: 'flex', gap: 16, flexWrap: 'wrap' }}>

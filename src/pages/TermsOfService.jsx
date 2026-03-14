@@ -34,7 +34,7 @@ export default function TermsOfService() {
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: `${C.primary}10`, borderRadius: 99, color: C.primary, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 20 }}><Scale size={14} /> Legal</div>
                     <h1 style={{ fontFamily: font.serif, fontSize: 'clamp(32px, 5vw, 48px)', color: C.text, marginBottom: 16 }}>Terms of Service</h1>
                     <p style={{ fontSize: 15, color: C.muted }}>Effective Date: March 11, 2025 · Last Updated: March 12, 2026</p>
-                    <p style={{ fontSize: 15, color: C.textSec, marginTop: 12, lineHeight: 1.7 }}>Please read these Terms of Service ("Terms") carefully before using Taxed ("we," "us," "our") at <strong>taxed.tax</strong> ("Service"). By accessing or using the Service, you agree to be bound by these Terms.</p>
+                    <p style={{ fontSize: 15, color: C.textSec, marginTop: 12, lineHeight: 1.7 }}>Please read these Terms of Service ("Terms") carefully before using Taxed ("we," "us," "our") at <strong>taxedhq.com</strong> ("Service"). By accessing or using the Service, you agree to be bound by these Terms.</p>
                 </motion.div>
             </div>
             <motion.div
@@ -68,7 +68,7 @@ export default function TermsOfService() {
                     <div style={{ marginTop: 12, padding: '16px 20px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, fontSize: 14 }}>
                         <strong>Taxed</strong><br />
                         Email: <a href="mailto:legal@taxedhq.com" style={{ color: C.primary }}>legal@taxedhq.com</a><br />
-                        Website: <a href="https://taxed.tax" style={{ color: C.primary }}>taxed.tax</a>
+                        Website: <a href="https://taxedhq.com" style={{ color: C.primary }}>taxedhq.com</a>
                     </div>
                 </Section>
                 <div style={{ marginTop: 40, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
