@@ -72,10 +72,12 @@ export default function Footer() {
                         Educational purpose tax tools and world-class insights.
                     </p>
                     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                        {SOCIAL_LINKS.map((item) => {
-                            const Icon = iconMap[item.icon];
+                        {(Array.isArray(SOCIAL_LINKS) ? SOCIAL_LINKS : []).map((item, i) => {
+                            const Icon = iconMap[item?.icon] || FileText;
+                            const href = item?.href || '#';
+                            const isExternal = typeof href === 'string' && href.startsWith('http');
                             return (
-                            <a key={item.id} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer"
+                            <a key={item?.id || i} href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined}
                                 className="social-btn"
                                 title={`${item.label} ${item.handle}`}
                                 aria-label={`${item.label} ${item.handle}`}

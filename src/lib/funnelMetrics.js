@@ -10,7 +10,8 @@ function safeParse(json, fallback) {
 
 function readMetrics() {
   if (typeof window === "undefined") return {};
-  return safeParse(window.localStorage.getItem(STORAGE_KEY), {});
+  const parsed = safeParse(window.localStorage.getItem(STORAGE_KEY), {});
+  return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : {};
 }
 
 function writeMetrics(metrics) {
@@ -19,16 +20,20 @@ function writeMetrics(metrics) {
 }
 
 export function markFunnelStep(step, metadata = {}) {
-  if (typeof window === "undefined") return;
-  const now = Date.now();
-  const metrics = readMetrics();
-  const current = metrics[step] || { count: 0 };
-  metrics[step] = {
-    count: Number(current.count || 0) + 1,
-    lastSeenAt: now,
-    metadata: { ...(current.metadata || {}), ...metadata },
-  };
-  writeMetrics(metrics);
+  try {
+    if (typeof window === "undefined") return;
+    const now = Date.now();
+    const metrics = readMetrics() ?? {};
+    const current = metrics[step] || { count: 0 };
+    metrics[step] = {
+      count: Number(current.count || 0) + 1,
+      lastSeenAt: now,
+      metadata: { ...(current.metadata || {}), ...metadata },
+    };
+    writeMetrics(metrics);
+  } catch {
+    // Funnel metrics are non-critical; avoid crashing the app
+  }
 }
 
 export function startFunnelTimer(name) {

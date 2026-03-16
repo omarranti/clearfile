@@ -1,18 +1,25 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Component, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Landing from './pages/Landing';
-import Calculator from './pages/Calculator';
-import Resources from './pages/Resources';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import Auth from './pages/Auth';
-import Admin from './pages/Admin';
-import UnderstandYourTaxes from './pages/UnderstandYourTaxes';
-import TakeHomePayCalculator from './pages/TakeHomePayCalculator';
-import FreelanceTaxCalculator from './pages/FreelanceTaxCalculator';
 import { supabase } from './lib/supabase';
+
+const Landing = lazy(() => import('./pages/Landing'));
+const Calculator = lazy(() => import('./pages/Calculator'));
+const Resources = lazy(() => import('./pages/Resources'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const Auth = lazy(() => import('./pages/Auth'));
+const Admin = lazy(() => import('./pages/Admin'));
+const UnderstandYourTaxes = lazy(() => import('./pages/UnderstandYourTaxes'));
+const TakeHomePayCalculator = lazy(() => import('./pages/TakeHomePayCalculator'));
+const FreelanceTaxCalculator = lazy(() => import('./pages/FreelanceTaxCalculator'));
+
+const RouteFallback = () => (
+  <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", color: '#4f6478', fontSize: 15 }}>
+    Loading…
+  </div>
+);
 
 const SEO_MAP = {
     "/": {
@@ -56,6 +63,22 @@ const SEO_MAP = {
         desc: "Going freelance? See exactly what you'll owe in taxes - federal + California - before your first invoice. Quarterly estimates, deductions, no surprises."
     }
 };
+
+class SectionErrorBoundary extends Component {
+    state = { hasError: false }
+    static getDerivedStateFromError() { return { hasError: true } }
+    componentDidCatch(e, info) { console.error('Section crashed:', e, info) }
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback ?? (
+                <div style={{ padding: 24, textAlign: 'center', color: '#4f6478', fontSize: 14 }}>
+                    This section failed to load. <button onClick={() => this.setState({ hasError: false })} style={{ marginLeft: 8, color: '#1f9d8b', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 function RouteHandler() {
     const { pathname } = useLocation();
@@ -108,7 +131,13 @@ function RouteHandler() {
 
 export default function App() {
     const [session, setSession] = useState(null);
-    const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('taxed_admin_auth') === 'true');
+    const [isAdmin, setIsAdmin] = useState(() => {
+        try {
+            return typeof localStorage !== 'undefined' && localStorage.getItem('taxed_admin_auth') === 'true';
+        } catch {
+            return false;
+        }
+    });
 
     useEffect(() => {
         let mounted = true;
@@ -123,7 +152,7 @@ export default function App() {
 
         return () => {
             mounted = false;
-            listener.subscription.unsubscribe();
+            listener?.subscription?.unsubscribe?.();
         };
     }, []);
 
@@ -149,22 +178,30 @@ export default function App() {
         <Router>
             <RouteHandler />
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'transparent' }}>
-                <Navbar session={session} onSignOut={signOut} isAdmin={isAdmin} onAdminLogout={adminLogout} />
+                <SectionErrorBoundary fallback={<div style={{ height: 68, background: 'rgba(255,255,255,0.82)' }} />}>
+                    <Navbar session={session} onSignOut={signOut} isAdmin={isAdmin} onAdminLogout={adminLogout} />
+                </SectionErrorBoundary>
                 <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 64 }}>
-                    <Routes>
-                        <Route path="/" element={<Landing />} />
-                        <Route path="/calculator" element={<Calculator session={session} />} />
-                        <Route path="/auth" element={<Auth session={session} />} />
-                        <Route path="/admin" element={<Admin isAdmin={isAdmin} onAdminLogin={adminLogin} onAdminLogout={adminLogout} />} />
-                        <Route path="/understand-your-taxes" element={<UnderstandYourTaxes />} />
-                        <Route path="/tax-calculator-take-home-pay" element={<TakeHomePayCalculator />} />
-                        <Route path="/freelance-tax-calculator" element={<FreelanceTaxCalculator />} />
-                        <Route path="/resources" element={<Resources />} />
-                        <Route path="/privacy" element={<PrivacyPolicy />} />
-                        <Route path="/terms" element={<TermsOfService />} />
-                    </Routes>
+                    <SectionErrorBoundary>
+                        <Suspense fallback={<RouteFallback />}>
+                                <Routes>
+                                <Route path="/" element={<Landing />} />
+                                <Route path="/calculator" element={<Calculator session={session} />} />
+                                <Route path="/auth" element={<Auth session={session} />} />
+                                <Route path="/admin" element={<Admin isAdmin={isAdmin} onAdminLogin={adminLogin} onAdminLogout={adminLogout} />} />
+                                <Route path="/understand-your-taxes" element={<UnderstandYourTaxes />} />
+                                <Route path="/tax-calculator-take-home-pay" element={<TakeHomePayCalculator />} />
+                                <Route path="/freelance-tax-calculator" element={<FreelanceTaxCalculator />} />
+                                <Route path="/resources" element={<Resources />} />
+                                <Route path="/privacy" element={<PrivacyPolicy />} />
+                                <Route path="/terms" element={<TermsOfService />} />
+                            </Routes>
+                        </Suspense>
+                    </SectionErrorBoundary>
                 </main>
-                <Footer />
+                <SectionErrorBoundary>
+                    <Footer />
+                </SectionErrorBoundary>
             </div>
         </Router>
     );

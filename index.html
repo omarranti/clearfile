@@ -2,6 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Taxed | Finally See Where Your Money Goes</title>
@@ -50,8 +52,42 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="margin:0;background:#FFFDF7;color:#1A1A2E;min-height:100vh">
+    <noscript><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;padding:24px;text-align:center">JavaScript is required to use Taxed. Please enable it and refresh.</div></noscript>
+    <div id="root" style="min-height:100vh">
+      <div id="app-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'DM Sans',sans-serif;color:#1A1A2E;font-size:18px;background:#FFFDF7;gap:8px">
+        <span>Loading Taxed…</span>
+        <span id="load-ts" style="font-size:12px;color:#888"></span>
+      </div>
+    </div>
+    <script>
+      (function() {
+        try { document.getElementById('load-ts').textContent = 'v ' + new Date().toISOString().slice(0,19); } catch(e){}
+        var loadStart = Date.now();
+        var lastErr = '';
+        function showLoadError(msg) {
+          try{sessionStorage.setItem('taxed_debug_err',lastErr||msg||'');}catch(x){}
+          var root = document.getElementById('root');
+          if (root && !root.querySelector('[data-taxed-error]')) {
+            lastErr = msg || lastErr;
+            root.innerHTML = '<div data-taxed-error style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:\'DM Sans\',sans-serif;padding:24px;background:#FFFDF7"><div style="max-width:440px;text-align:center"><h2 style="color:#1A1A2E;margin-bottom:12px;font-size:18px">Something went wrong</h2><p style="color:#4f6478;margin-bottom:16px;font-size:14px">The app failed to load. Try refreshing the page.</p>' + (lastErr ? '<p style="font-size:12px;color:#c00;margin-bottom:12px;word-break:break-all;background:#fee;padding:8px;border-radius:6px">' + String(lastErr).replace(/</g,'&lt;').substring(0,500) + '</p>' : '') + '<p style="font-size:12px;color:#888;margin-bottom:16px">Open DevTools (F12) → Console for more details</p><button onclick="location.reload()" style="padding:10px 20px;background:#1f9d8b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Refresh</button></div></div>';
+          }
+        }
+        window.addEventListener('error', function(e) {
+          lastErr = (e.message || '') + (e.filename ? ' @ ' + e.filename : '');
+          if (!window.__TAXED_LOADED) showLoadError();
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+          lastErr = (e.reason && (e.reason.message || String(e.reason))) || '';
+          if (!window.__TAXED_LOADED && Date.now() - loadStart < 10000) showLoadError();
+        });
+        setTimeout(function() {
+          if (!window.__TAXED_LOADED && !document.querySelector('[data-taxed-error]')) {
+            showLoadError('App did not load within 3 seconds. Check Network tab (F12) for failed requests.');
+          }
+        }, 3000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
