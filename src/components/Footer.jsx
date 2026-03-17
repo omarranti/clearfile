@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom';
 import { FileText, Github, Twitter, Mail, Instagram } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SOCIAL_LINKS } from '../config/socials';
-
-const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
+import { font } from '../lib/ui';
 
 function TikTokIcon({ size = 16 }) {
     return (
@@ -92,16 +91,8 @@ export default function Footer() {
                                     textDecoration: 'none',
                                     position: 'relative',
                                 }}
-                                onMouseEnter={e => {
-                                    setActiveTip(item.id);
-                                    e.currentTarget.style.background = '#e4edf7';
-                                    e.currentTarget.style.color = '#102a43';
-                                }}
-                                onMouseLeave={e => {
-                                    setActiveTip(null);
-                                    e.currentTarget.style.background = '#eef4fb';
-                                    e.currentTarget.style.color = '#4f6478';
-                                }}
+                                onMouseEnter={() => setActiveTip(item.id)}
+                                onMouseLeave={() => setActiveTip(null)}
                             >
                                 <Icon size={16} />
                                 <span className={`social-tip ${activeTip === item.id ? 'show' : ''}`}>
@@ -114,7 +105,7 @@ export default function Footer() {
 
                 {/* Tools */}
                 <div>
-                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#1f9d8b', marginBottom: 20 }}>Tools</h4>
+                    <h4 style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#1f9d8b', marginBottom: 20 }}>Tools</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {[
                             { label: 'Tax Navigator', path: '/calculator' },
@@ -122,10 +113,7 @@ export default function Footer() {
                             { label: 'Credit Finder', path: '/calculator' },
                         ].map((item, i) => (
                             <li key={i}>
-                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}
-                                    onMouseEnter={e => e.currentTarget.style.color = '#102a43'}
-                                    onMouseLeave={e => e.currentTarget.style.color = '#4f6478'}
-                                >{item.label}</Link>
+                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}>{item.label}</Link>
                             </li>
                         ))}
                     </ul>
@@ -133,7 +121,7 @@ export default function Footer() {
 
                 {/* Resources */}
                 <div>
-                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#1f9d8b', marginBottom: 20 }}>Resources</h4>
+                    <h4 style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#1f9d8b', marginBottom: 20 }}>Resources</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {[
                             { label: 'Tax Deadlines', path: '/resources' },
@@ -141,10 +129,7 @@ export default function Footer() {
                             { label: 'Find a CPA', path: '/resources' },
                         ].map((item, i) => (
                             <li key={i}>
-                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}
-                                    onMouseEnter={e => e.currentTarget.style.color = '#102a43'}
-                                    onMouseLeave={e => e.currentTarget.style.color = '#4f6478'}
-                                >{item.label}</Link>
+                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}>{item.label}</Link>
                             </li>
                         ))}
                     </ul>
@@ -152,17 +137,14 @@ export default function Footer() {
 
                 {/* Legal */}
                 <div>
-                    <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#1f9d8b', marginBottom: 20 }}>Legal</h4>
+                    <h4 style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#1f9d8b', marginBottom: 20 }}>Legal</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {[
                             { label: 'Privacy Policy', path: '/privacy' },
                             { label: 'Terms of Service', path: '/terms' },
                         ].map((item, i) => (
                             <li key={i}>
-                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}
-                                    onMouseEnter={e => e.currentTarget.style.color = '#102a43'}
-                                    onMouseLeave={e => e.currentTarget.style.color = '#4f6478'}
-                                >{item.label}</Link>
+                                <Link to={item.path} className="footer-link" style={{ color: '#4f6478', textDecoration: 'none', fontSize: 13, transition: 'color 0.18s' }}>{item.label}</Link>
                             </li>
                         ))}
                     </ul>
@@ -177,14 +159,8 @@ export default function Footer() {
             }}>
                 <span>&copy; {new Date().getFullYear()} Taxed. Not actual tax advice.</span>
                 <div className="footer-legal-links" style={{ display: 'flex', gap: 24 }}>
-                    <Link to="/privacy" className="footer-link" style={{ textDecoration: 'none', color: '#6b7f93', transition: 'color 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#102a43'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#6b7f93'}
-                    >Privacy Policy</Link>
-                    <Link to="/terms" className="footer-link" style={{ textDecoration: 'none', color: '#6b7f93', transition: 'color 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#102a43'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#6b7f93'}
-                    >Terms of Service</Link>
+                    <Link to="/privacy" className="footer-link" style={{ textDecoration: 'none', color: '#6b7f93', transition: 'color 0.2s' }}>Privacy Policy</Link>
+                    <Link to="/terms" className="footer-link" style={{ textDecoration: 'none', color: '#6b7f93', transition: 'color 0.2s' }}>Terms of Service</Link>
                 </div>
             </div>
             <style>{`
