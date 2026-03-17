@@ -2,8 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FileText, Calendar, BookOpen, AlertTriangle, MessageSquare, Database, ArrowRight, DollarSign, ChevronDown } from "lucide-react";
-
-const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
+import { font } from "../lib/ui";
 
 const glass = {
   background: "rgba(255,255,255,0.68)",
@@ -51,7 +50,7 @@ export default function Resources() {
           transition={{ duration: reduceMotion ? 0 : 0.55 }}
         >
         <div style={{ textAlign: "center", marginBottom: 54 }}>
-          <div style={{ ...glass, borderRadius: 999, display: "inline-flex", padding: "7px 14px", color: "#1f9d8b", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
+          <div style={{ ...glass, borderRadius: 999, display: "inline-flex", padding: "7px 14px", color: "#1f9d8b", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
             Resource Hub
           </div>
           <h1 style={{ fontFamily: font.serif, margin: "0 0 12px", fontSize: "clamp(34px, 6vw, 58px)", lineHeight: 1.06, letterSpacing: "-0.02em" }}>

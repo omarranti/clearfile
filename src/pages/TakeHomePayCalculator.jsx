@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Calculator, TrendingUp, CircleDollarSign } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { font } from "../lib/ui";
 
-const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 const glass = {
   background: "rgba(255,255,255,0.72)",
   border: "1px solid #d6e2ef",
@@ -62,7 +62,7 @@ export default function TakeHomePayCalculator() {
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: reduceMotion ? 0 : 0.52 }}
         >
-          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#1f9d8b", marginBottom: 14 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#1f9d8b", marginBottom: 14 }}>
             tax calculator take home pay
           </p>
           <h1 style={{ margin: "0 0 14px", fontFamily: font.serif, fontSize: "clamp(34px, 5vw, 60px)", lineHeight: 1.05 }}>

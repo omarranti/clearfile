@@ -3,18 +3,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ArrowRight, Briefcase, Laptop, PlusCircle, CheckCircle2, ChevronDown } from "lucide-react";
 import { markFunnelStep, startFunnelTimer } from "../lib/funnelMetrics";
+import { font, glass } from "../lib/ui";
 
-const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
 const demoVideoSrc = `${import.meta.env.BASE_URL}media/model-demo.mp4`;
 const demoPosterSrc = `${import.meta.env.BASE_URL}og-image.png`;
-
-const glass = {
-  background: "rgba(255,255,255,0.92)",
-  border: "1px solid #e7ebf0",
-  boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
-  backdropFilter: "blur(10px)",
-  WebkitBackdropFilter: "blur(10px)",
-};
 
 const smoothEase = [0.2, 0.9, 0.25, 1];
 const slamEase = [0.18, 0.85, 0.28, 1];
@@ -201,15 +193,11 @@ export default function Landing() {
 
   return (
     <div style={{ fontFamily: font.sans, background: "#f7f8fa", color: "#102a43", minHeight: "100vh", position: "relative" }}>
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <motion.div
-          animate={reduceMotion ? { x: 0, y: 0 } : { x: [0, -16, 0], y: [0, 12, 0] }}
-          transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, willChange: "transform" }}>
+        <div
           style={{ position: "absolute", top: "-18%", right: "-4%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(31,157,139,0.08), transparent 66%)", filter: "blur(58px)" }}
         />
-        <motion.div
-          animate={reduceMotion ? { x: 0, y: 0 } : { x: [0, 14, 0], y: [0, -10, 0] }}
-          transition={{ duration: 16, ease: "easeInOut", repeat: Infinity }}
+        <div
           style={{ position: "absolute", bottom: "-22%", left: "-12%", width: "54vw", height: "54vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.07), transparent 68%)", filter: "blur(58px)" }}
         />
       </div>
@@ -223,7 +211,7 @@ export default function Landing() {
             transition={{ duration: reduceMotion ? 0 : 0.72, ease: smoothEase }}
             style={{ textAlign: "center", marginBottom: 28 }}
           >
-            <div style={{ ...glass, display: "inline-flex", borderRadius: 999, padding: "7px 14px", color: "#1f9d8b", fontWeight: 700, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 24 }}>
+            <div style={{ ...glass, display: "inline-flex", borderRadius: 999, padding: "7px 14px", color: "#1f9d8b", fontWeight: 700, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 24 }}>
               Tax Clarity Platform
             </div>
 
@@ -288,7 +276,7 @@ export default function Landing() {
             style={{ ...glass, borderRadius: 22, padding: 16, marginBottom: 16 }}
           >
             <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid #e2e7ed", background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)" }}>
-              <video src={demoVideoSrc} poster={demoPosterSrc} autoPlay loop muted playsInline preload="metadata" className="hero-demo-video" style={{ width: "100%", display: "block", minHeight: 220, aspectRatio: "16/9", objectFit: "cover" }} />
+              <video src={demoVideoSrc} poster={demoPosterSrc} autoPlay loop muted playsInline preload="metadata" className="hero-demo-video" aria-label="Demo of the Taxed tax clarity platform showing income breakdown and bracket visualization" style={{ width: "100%", display: "block", minHeight: 220, aspectRatio: "16/9", objectFit: "cover" }} />
             </div>
           </motion.div>
 
@@ -355,7 +343,7 @@ export default function Landing() {
           transition={reveal.transition}
           style={{ maxWidth: 980, margin: "0 auto", ...glass, borderRadius: 24, padding: "clamp(22px, 4vw, 40px)" }}
         >
-          <p style={{ margin: 0, color: "#1f9d8b", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", marginBottom: 14 }}>
+          <p style={{ margin: 0, color: "#1f9d8b", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
             Section 2: The Core Problem
           </p>
           <h2 style={{ margin: "0 0 20px", fontFamily: font.serif, fontSize: "clamp(30px, 5vw, 56px)", lineHeight: 1.06, letterSpacing: "-0.024em" }}>
@@ -385,7 +373,7 @@ export default function Landing() {
           transition={reveal.transition}
           style={{ maxWidth: 980, margin: "0 auto", ...glass, borderRadius: 24, padding: "clamp(22px, 4vw, 40px)" }}
         >
-          <p style={{ margin: 0, color: "#1f9d8b", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", marginBottom: 14 }}>
+          <p style={{ margin: 0, color: "#1f9d8b", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
             Section 3: The Opportunity
           </p>
           <h2 style={{ margin: "0 0 20px", fontFamily: font.serif, fontSize: "clamp(30px, 5vw, 56px)", lineHeight: 1.06, letterSpacing: "-0.024em" }}>
@@ -506,7 +494,7 @@ export default function Landing() {
             transition={{ duration: reduceMotion ? 0 : 0.52, ease: smoothEase }}
             style={{ textAlign: "center", marginBottom: 28 }}
           >
-            <p style={{ margin: 0, color: "#1f9d8b", fontSize: 11, fontWeight: 700, letterSpacing: "0.11em", textTransform: "uppercase", marginBottom: 10 }}>
+            <p style={{ margin: 0, color: "#1f9d8b", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
               Who This Is For
             </p>
             <h2 style={{ margin: 0, fontFamily: font.serif, fontSize: "clamp(30px, 4.8vw, 52px)", letterSpacing: "-0.02em" }}>
