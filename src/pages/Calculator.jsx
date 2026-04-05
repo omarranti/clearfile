@@ -8,7 +8,8 @@ import {
   ChevronRight, Sparkles, Users, Home, User, ChevronsUpDown
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { claimEntitlement, getCheckoutStatus, loadEntitlement, startCheckout } from "../lib/billing";
+import { useAccess } from "../hooks/useAccess";
+import GetAccessButton from "../components/GetAccessButton";
 import PersonalizedTaxPlanCard from "../components/PersonalizedTaxPlanCard";
 import { buildPersonalizedTaxPlan } from "../lib/personalizedTaxPlan";
 import { markFunnelStep, stopFunnelTimer } from "../lib/funnelMetrics";
@@ -528,13 +529,9 @@ export default function TaxedApp({ session }) {
   const [actions, setActions] = useState({});
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudMessage, setCloudMessage] = useState("");
-  const [entitlement, setEntitlement] = useState({ full_access: false, pro_ai: false, status: "inactive" });
+  const { hasAccess: hasLifetimeAccess } = useAccess(session);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallReason, setPaywallReason] = useState("unlock");
-  const [selectedPlan, setSelectedPlan] = useState("full");
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutNotice, setCheckoutNotice] = useState("");
-  const [checkoutSessionId, setCheckoutSessionId] = useState(() => localStorage.getItem("taxed_checkout_session_id") || "");
   const [incomeWallShown, setIncomeWallShown] = useState(false);
   const reportRef = useRef(null);
   const hasTrackedFirstReport = useRef(false);
@@ -554,7 +551,7 @@ export default function TaxedApp({ session }) {
     markFunnelStep("onboarding_completed", { stepCount: 3 });
     setBoarded(true);
   };
-  const hasFullAccess = Boolean(entitlement?.full_access);
+  const hasFullAccess = hasLifetimeAccess;
 
   useEffect(() => {
     if (boarded) return;
@@ -611,71 +608,7 @@ export default function TaxedApp({ session }) {
     stopFunnelTimer("landing_to_report", "time_to_first_report_view");
   }, [boarded]);
 
-  useEffect(() => {
-    const syncEntitlement = async () => {
-      try {
-        if (!userId) {
-          setEntitlement({ full_access: false, pro_ai: false, status: "inactive" });
-          return;
-        }
-        const data = await loadEntitlement(userId);
-        if (data) setEntitlement(data);
-      } catch { /* ignore */ }
-    };
-    syncEntitlement();
-  }, [userId]);
 
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const checkoutState = params.get("checkout");
-      const sessionId = params.get("session_id");
-      if (!sessionId || checkoutState !== "success") return;
-
-      const verify = async () => {
-        try {
-          const data = await getCheckoutStatus(sessionId);
-          if (!data.active) return;
-          setEntitlement({
-            full_access: true,
-            pro_ai: data.plan === "pro",
-            status: "active",
-          });
-          localStorage.setItem("taxed_checkout_session_id", sessionId);
-          setCheckoutSessionId(sessionId);
-          setCheckoutNotice(
-            userId
-              ? "Payment confirmed. Your access is active."
-              : "Payment confirmed. Create or log into your account to protect your purchase."
-          );
-          if (data.plan === "pro") {
-            localStorage.setItem("taxed_ai_free_uses", "0");
-          }
-        } catch (error) {
-          setCheckoutNotice(error.message || "Could not verify checkout status.");
-        }
-      };
-
-      verify();
-    } catch { /* ignore */ }
-  }, [userId]);
-
-  useEffect(() => {
-    const claim = async () => {
-      if (!userId || !checkoutSessionId) return;
-      try {
-        const result = await claimEntitlement(checkoutSessionId);
-        setEntitlement((prev) => ({
-          ...prev,
-          full_access: Boolean(result.full_access),
-          pro_ai: Boolean(result.pro_ai),
-          status: "active",
-        }));
-        setCheckoutNotice("Purchase linked to your account.");
-      } catch { /* ignore */ }
-    };
-    claim();
-  }, [userId, checkoutSessionId]);
 
   const iraSave = Math.round(5000 * r.fed.marginalRate);
   const hsaSave = Math.round(4150 * r.fed.marginalRate);
@@ -900,21 +833,6 @@ export default function TaxedApp({ session }) {
     setIncome(nextIncome);
   };
 
-  const handleCheckout = async () => {
-    try {
-      setCheckoutLoading(true);
-      setCheckoutNotice("");
-      markFunnelStep("checkout_started", { plan: selectedPlan === "monthly" ? "monthly" : "founders" });
-      await startCheckout({
-        plan: selectedPlan === "monthly" ? "pro" : "full",
-        email: session?.user?.email || undefined,
-        scenario: { income, filingStatus: status, dependents: deps, stateCode },
-      });
-    } catch (error) {
-      setCheckoutNotice(error.message || "Unable to start checkout right now.");
-      setCheckoutLoading(false);
-    }
-  };
 
   const actionItems = [
     ...(hasPenalty ? [{ id: "fta", text: <>Ask your CPA to call the IRS for the <strong style={{ color: C.text }}>First-Time Penalty Abatement</strong>. If they won't, call <strong style={{ color: C.primary }}>1-800-829-1040</strong> yourself — 10 minutes.</> }] : []),
@@ -1216,7 +1134,7 @@ export default function TaxedApp({ session }) {
           <div style={{ fontSize: 14, color: C.text, fontWeight: 700 }}>We found {opportunities.length} opportunities in your profile.</div>
           {!hasFullAccess && (
             <div style={{ fontSize: 12, color: C.muted }}>
-              Full diagnostic is free. Join the Founders Club for <strong style={{ color: C.text }}>$19.99</strong> — 3 months included.
+              Full diagnostic is free. Get full access for <strong style={{ color: C.text }}>$0.99</strong>. One time. Yours forever.
             </div>
           )}
         </div>
@@ -1301,16 +1219,6 @@ export default function TaxedApp({ session }) {
         <div style={{ marginTop: 40, padding: "16px 20px", background: `${C.primary}06`, border: `2px solid ${C.primary}10`, borderRadius: 16, fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
           <strong style={{ color: C.textSec }}>Disclaimer:</strong> {DISCLAIMER}
         </div>
-        {!userId && checkoutSessionId && (
-          <div style={{ marginTop: 14, padding: "12px 14px", background: `${C.warning}10`, border: `1px solid ${C.warning}30`, borderRadius: 12, fontSize: 13, color: C.textSec }}>
-            Payment detected. To protect your purchase across devices, create or log in to your account from the top-right <strong style={{ color: C.text }}>Log In / Sign Up</strong> button.
-          </div>
-        )}
-        {checkoutNotice && (
-          <div style={{ marginTop: 12, fontSize: 13, color: checkoutNotice.toLowerCase().includes("could not") ? C.danger : C.success }}>
-            {checkoutNotice}
-          </div>
-        )}
       </div>
 
       <AnimatePresence>
@@ -1326,41 +1234,18 @@ export default function TaxedApp({ session }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.97 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-              style={{ width: "min(520px, 100%)", background: C.surface, borderRadius: 28, border: `2px solid ${C.border}`, boxShadow: shadow.md, padding: "32px 28px 28px" }}
+              style={{ width: "min(420px, 100%)", background: C.surface, borderRadius: 28, border: `2px solid ${C.border}`, boxShadow: shadow.md, padding: "32px 28px 28px" }}
             >
-              <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ textAlign: "center", marginBottom: 24 }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🔓</div>
                 <h3 style={{ margin: 0, fontFamily: font.sans, fontWeight: 800, fontSize: 26, color: C.text, lineHeight: 1.2 }}>Unlock your full tax picture</h3>
                 <p style={{ margin: "10px 0 0", fontSize: 16, color: C.textSec, lineHeight: 1.55 }}>
-                  {paywallReason === "income" && "You're in advanced territory. The full prescription is one tap away."}
+                  {paywallReason === "income" && "You're in advanced territory. Full access is one tap away."}
                   {paywallReason === "credits" && "We found more opportunities in your profile. Unlock the details."}
-                  {paywallReason === "export" && "Exporting your CPA pack is included when you upgrade."}
-                  {paywallReason === "forms" && "Auto-generating IRS forms and letters is included in Founders Club."}
-                  {paywallReason === "plan" && "Exporting your personalized step-by-step tax plan is included in Founders Club."}
+                  {paywallReason === "export" && "Exporting your CPA pack is included with full access."}
+                  {paywallReason === "forms" && "Auto-generating IRS forms and letters is included with full access."}
+                  {paywallReason === "plan" && "Exporting your personalized step-by-step tax plan is included with full access."}
                 </p>
-              </div>
-
-              <div style={{ display: "grid", gap: 12, marginBottom: 20 }}>
-                <button onClick={() => setSelectedPlan("full")} style={{ textAlign: "left", borderRadius: 20, border: `3px solid ${selectedPlan === "full" ? C.primary : C.border}`, background: selectedPlan === "full" ? `${C.primary}0C` : C.surface, padding: "20px 20px", cursor: "pointer", transition: "all 0.15s", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", top: 0, right: 0, background: C.accent, color: "#fff", fontSize: 12, fontWeight: 800, padding: "4px 12px", borderBottomLeftRadius: 12 }}>Limited offer</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 17, fontWeight: 800, color: C.text }}>Founders Club</div>
-                      <div style={{ fontSize: 14, color: C.textSec, marginTop: 2 }}>$19.99 today for 3 months, then $9.99/mo (USD; taxes may apply)</div>
-                    </div>
-                    <div style={{ fontFamily: font.sans, fontWeight: 800, color: C.primary, fontSize: 28, whiteSpace: "nowrap" }}>$19.99<span style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}> then $9.99/mo</span></div>
-                  </div>
-                  <div style={{ marginTop: 8, fontSize: 13, color: C.accent, fontWeight: 700 }}>First 10,000 members only — offer ends April 15</div>
-                </button>
-                <button onClick={() => setSelectedPlan("monthly")} style={{ textAlign: "left", borderRadius: 20, border: `3px solid ${selectedPlan === "monthly" ? C.secondary : C.border}`, background: selectedPlan === "monthly" ? `${C.secondary}0C` : C.surface, padding: "18px 20px", cursor: "pointer", transition: "all 0.15s" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>Monthly</div>
-                      <div style={{ fontSize: 14, color: C.textSec, marginTop: 2 }}>Full access, no commitment</div>
-                    </div>
-                    <div style={{ fontFamily: font.sans, fontWeight: 800, color: C.secondary, fontSize: 24, whiteSpace: "nowrap" }}>$9.99<span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>/mo</span></div>
-                  </div>
-                </button>
               </div>
 
               {primaryOpportunity && (
@@ -1368,19 +1253,14 @@ export default function TaxedApp({ session }) {
                   Your top opportunity: <strong style={{ color: C.text }}>{primaryOpportunity.name}</strong>
                 </div>
               )}
-              {checkoutNotice && <div style={{ textAlign: "center", marginBottom: 12, fontSize: 14, color: C.danger }}>{checkoutNotice}</div>}
 
-              <button
-                onClick={handleCheckout}
-                disabled={checkoutLoading}
-                style={{ width: "100%", border: "none", borderRadius: 18, background: selectedPlan === "monthly" ? C.secondary : C.primary, color: "#fff", fontSize: 18, fontWeight: 800, padding: "18px 24px", cursor: checkoutLoading ? "wait" : "pointer", boxShadow: `0 6px 20px ${selectedPlan === "monthly" ? C.secondary : C.primary}40`, transition: "all 0.15s" }}
-              >
-                {checkoutLoading ? "Starting checkout..." : "Let's go"}
-              </button>
-              <button onClick={() => setPaywallOpen(false)} style={{ width: "100%", marginTop: 10, border: "none", background: "transparent", color: C.muted, fontSize: 15, fontWeight: 700, padding: "12px", cursor: "pointer" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                <GetAccessButton session={session} />
+              </div>
+              <button onClick={() => setPaywallOpen(false)} style={{ width: "100%", marginTop: 4, border: "none", background: "transparent", color: C.muted, fontSize: 15, fontWeight: 700, padding: "12px", cursor: "pointer" }}>
                 Keep exploring for free
               </button>
-              <p style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: C.muted }}>Secure checkout via Stripe. Founders Club: $19.99 today for 3 months, then $9.99/mo. USD; taxes may apply. Cancel anytime.</p>
+              <p style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: C.muted }}>Secure checkout via Stripe. One-time payment. No renewal.</p>
             </motion.div>
           </motion.div>
         )}

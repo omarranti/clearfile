@@ -9,11 +9,6 @@ const required = (name) => {
 
 export const stripe = new Stripe(required("STRIPE_SECRET_KEY"));
 
-export const stripePrices = {
-  full: required("STRIPE_PRICE_FULL_MONTHLY"),
-  pro: required("STRIPE_PRICE_PRO_MONTHLY"),
-};
-
 export const supabaseAdmin = createClient(
   required("VITE_SUPABASE_URL"),
   required("SUPABASE_SERVICE_ROLE_KEY"),
