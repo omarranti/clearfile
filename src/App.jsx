@@ -14,6 +14,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const UnderstandYourTaxes = lazy(() => import('./pages/UnderstandYourTaxes'));
 const TakeHomePayCalculator = lazy(() => import('./pages/TakeHomePayCalculator'));
 const FreelanceTaxCalculator = lazy(() => import('./pages/FreelanceTaxCalculator'));
+const Success = lazy(() => import('./pages/Success'));
 
 const RouteFallback = () => (
   <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif", color: '#4f6478', fontSize: 15 }}>
@@ -52,7 +53,7 @@ const SEO_MAP = {
     },
     "/understand-your-taxes": {
         title: "Understand Your Taxes - Finally See Where Your Money Goes",
-        desc: "TurboTax files your taxes. Taxed explains them. See a clear estimate of where your money goes - brackets, deductions, and credits in plain English. Founders Club: $19.99 today for 3 months, then $9.99/month. USD; taxes may apply."
+        desc: "TurboTax files your taxes. Taxed explains them. See a clear estimate of where your money goes - brackets, deductions, and credits in plain English. Full access for $0.99. One time. Yours forever."
     },
     "/tax-calculator-take-home-pay": {
         title: "Tax Calculator: See Your Exact Take-Home Pay Before You Decide",
@@ -195,6 +196,7 @@ export default function App() {
                                 <Route path="/resources" element={<Resources />} />
                                 <Route path="/privacy" element={<PrivacyPolicy />} />
                                 <Route path="/terms" element={<TermsOfService />} />
+                                <Route path="/success" element={<Success />} />
                             </Routes>
                         </Suspense>
                     </SectionErrorBoundary>

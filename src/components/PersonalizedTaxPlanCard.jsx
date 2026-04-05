@@ -123,7 +123,7 @@ export default function PersonalizedTaxPlanCard({
       </div>
       {!hasFullAccess && (
         <div style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>
-          You can keep exploring this preview. Upgrade only when you want the full timeline and PDF export.
+          You can keep exploring this preview. Get full access for $0.99 to unlock the full timeline and PDF export.
         </div>
       )}
     </div>

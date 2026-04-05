@@ -406,7 +406,7 @@ export default function Landing() {
 
           <div style={{ marginTop: 24, ...glass, borderRadius: 16, padding: "16px 18px" }}>
             <p style={{ margin: 0, color: "#102a43", fontWeight: 700, fontSize: "clamp(16px, 1.6vw, 20px)", lineHeight: 1.5 }}>
-              Start free. Founders Club: <span style={{ color: "#1f9d8b" }}>$19.99 today for 3 months</span>, then $9.99/mo. USD; taxes may apply.
+              Full access. One time. <span style={{ color: "#1f9d8b" }}>$0.99</span>. No renewal. Yours forever.
             </p>
           </div>
 
@@ -425,74 +425,32 @@ export default function Landing() {
           whileInView={reveal.whileInView}
           viewport={{ once: true }}
           transition={reveal.transition}
-          style={{ maxWidth: 980, margin: "0 auto" }}
+          style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}
         >
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <h2 style={{ margin: "0 0 16px", fontFamily: font.serif, fontSize: "clamp(28px, 4vw, 48px)", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-              Simple, transparent pricing
-            </h2>
-            <p style={{ margin: 0, color: "#43596e", fontSize: "clamp(16px, 1.6vw, 18px)", maxWidth: 600, marginInline: "auto" }}>
-              Start exploring for free. Unlock the full prescription when you're ready.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24, alignItems: "start" }}>
-            {/* Free Tier */}
-            <div style={{ ...glass, borderRadius: 24, padding: 32, border: "1px solid #e4e9ee" }}>
-              <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#102a43" }}>Free</h3>
-              <p style={{ margin: "0 0 24px", color: "#43596e", fontSize: 15, minHeight: 44 }}>Basic tax breakdown and effective rate calculation.</p>
-              <div style={{ fontSize: 36, fontWeight: 800, color: "#102a43", marginBottom: 24, fontFamily: font.sans }}>$0</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "grid", gap: 12 }}>
-                {[
-                  "Federal & State brackets",
-                  "Effective tax rate",
-                  "Top opportunity revealed",
-                  "Interactive income slider"
-                ].map((feature, i) => (
-                  <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 15, color: "#334e68" }}>
-                    <CheckCircle2 size={18} color="#829ab1" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/calculator" onClick={() => trackCalculatorCta("pricing_free")} style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "rgba(16, 42, 67, 0.06)", color: "#102a43", textDecoration: "none", fontWeight: 700, transition: "background 0.2s" }}>
-                Start Free
-              </Link>
-            </div>
-
-            {/* Founders Club Tier */}
-            <div style={{ background: "#fff", borderRadius: 24, padding: 32, border: "1.5px solid #d6dde5", boxShadow: "0 16px 36px rgba(19,40,62,0.11)", position: "relative" }}>
-              <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "#1f9d8b", color: "#fff", padding: "4px 16px", borderRadius: 99, fontSize: 13, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                Limited Offer
-              </div>
-              <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#102a43" }}>Founders Club</h3>
-              <p style={{ margin: "0 0 24px", color: "#43596e", fontSize: 15, minHeight: 44 }}>The complete tax clarity platform. First 10,000 members only.</p>
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  <span style={{ fontSize: 36, fontWeight: 800, color: "#1f9d8b", fontFamily: font.sans }}>$19.99</span>
-                </div>
-                <div style={{ fontSize: 14, color: "#43596e", marginTop: 4, fontWeight: 500 }}>for 3 months, then $9.99/mo</div>
-                <div style={{ fontSize: 12, color: "#6b7d8f", marginTop: 4 }}>USD; taxes may apply</div>
-              </div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "grid", gap: 12 }}>
-                {[
-                  "Everything in Free",
-                  "All opportunities unlocked",
-                  "Export CPA-ready PDF",
-                  "Unlimited AI tax answers",
-                  "Penalty abatement scripts"
-                ].map((feature, i) => (
-                  <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 15, color: "#102a43", fontWeight: i === 0 ? 600 : 400 }}>
-                    <CheckCircle2 size={18} color="#1f9d8b" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/calculator" onClick={() => trackCalculatorCta("pricing_founders")} style={{ display: "block", textAlign: "center", padding: "14px", borderRadius: 12, background: "#13283e", color: "#fff", textDecoration: "none", fontWeight: 700, transition: "background 0.2s", boxShadow: "0 10px 24px rgba(19,40,62,0.18)" }}>
-                Unlock Full Access
-              </Link>
-            </div>
-          </div>
+          <h2 style={{ margin: "0 0 16px", fontFamily: font.serif, fontSize: "clamp(28px, 4vw, 48px)", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+            Full access. One time. $0.99.
+          </h2>
+          <p style={{ margin: "0 0 32px", color: "#43596e", fontSize: "clamp(16px, 1.6vw, 18px)" }}>
+            No subscription. No renewal. Yours forever.
+          </p>
+          <ul style={{ listStyle: "none", padding: 0, margin: "0 auto 32px", display: "grid", gap: 12, maxWidth: 360, textAlign: "left" }}>
+            {[
+              "Federal + State tax breakdown",
+              "All credits and deductions unlocked",
+              "Unlimited income modeling",
+              "Export CPA-ready PDF",
+              "Personalized tax plan",
+              "Penalty abatement scripts"
+            ].map((feature, i) => (
+              <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 15, color: "#102a43" }}>
+                <CheckCircle2 size={18} color="#1f9d8b" style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+          <Link to="/calculator" onClick={() => trackCalculatorCta("pricing_lifetime")} style={{ display: "inline-block", padding: "16px 32px", borderRadius: 12, background: "#1F3044", color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: 18, boxShadow: "0 10px 24px rgba(31,48,68,0.18)", transition: "all 0.15s" }}>
+            Get Full Access - $0.99
+          </Link>
         </motion.div>
       </section>
 
