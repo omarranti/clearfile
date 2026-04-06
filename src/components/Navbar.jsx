@@ -2,14 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { FileText, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-const font = { serif: "'DM Serif Display', Georgia, serif", sans: "'DM Sans', system-ui, sans-serif" };
-
-const glass = {
-    background: 'rgba(255,255,255,0.82)',
-    backdropFilter: 'blur(20px) saturate(125%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(125%)',
-};
+import { font, navGlass as glass } from '../lib/ui';
 
 export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -78,16 +71,13 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
                 {/* Desktop Nav */}
                 <div style={{ display: 'none', gap: 8, alignItems: 'center' }} className="nav-desktop">
                     {links.map(l => (
-                        <Link key={l.path} to={l.path} className="nav-pill" style={{
+                        <Link key={l.path} to={l.path} className={`nav-pill${isActive(l.path) ? ' nav-pill--active' : ''}`} style={{
                             fontSize: 13, fontWeight: 500,
                             color: isActive(l.path) ? '#1f9d8b' : '#4f6478',
                             textDecoration: 'none', padding: '7px 12px', borderRadius: 999,
                             transition: 'all 0.18s',
                             background: isActive(l.path) ? 'rgba(31,157,139,0.1)' : 'transparent',
-                        }}
-                            onMouseEnter={e => { if (!isActive(l.path)) e.currentTarget.style.color = '#102a43'; }}
-                            onMouseLeave={e => { if (!isActive(l.path)) e.currentTarget.style.color = '#4f6478'; }}
-                        >
+                        }}>
                             {l.name}
                         </Link>
                     ))}
@@ -114,10 +104,7 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
                             fontSize: 13, fontWeight: 600, textDecoration: 'none',
                             boxShadow: '0 3px 12px rgba(31,157,139,0.22)',
                             transition: 'all 0.18s', display: 'inline-block', whiteSpace: 'nowrap'
-                        }}
-                            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 5px 18px rgba(31,157,139,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 3px 12px rgba(31,157,139,0.22)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                        >
+                        }}>
                             Unlock / Sign In
                         </Link>
                     )}
@@ -143,9 +130,11 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="nav-mobile-btn"
+                    aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                    aria-expanded={isOpen}
                     style={{ background: '#eef4fb', border: '1px solid #d8e3f0', borderRadius: 12, padding: '12px', cursor: 'pointer', color: '#102a43', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 }}
                 >
-                    {isOpen ? <X size={20} /> : <Menu size={20} />}
+                    {isOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
                 </button>
             </div>
 
@@ -232,6 +221,10 @@ export default function Navbar({ session, onSignOut, isAdmin, onAdminLogout }) {
         .nav-mobile-btn:focus-visible {
           box-shadow: 0 0 0 3px rgba(31,157,139,0.24);
           outline: none;
+        }
+
+        .nav-pill--active {
+          color: #1f9d8b !important;
         }
 
         @media (min-width: 900px) {

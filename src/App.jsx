@@ -178,11 +178,12 @@ export default function App() {
     return (
         <Router>
             <RouteHandler />
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'transparent' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: 'transparent' }}>
+                <a href="#main-content" className="skip-to-content">Skip to content</a>
                 <SectionErrorBoundary fallback={<div style={{ height: 68, background: 'rgba(255,255,255,0.82)' }} />}>
                     <Navbar session={session} onSignOut={signOut} isAdmin={isAdmin} onAdminLogout={adminLogout} />
                 </SectionErrorBoundary>
-                <main style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 'calc(68px + env(safe-area-inset-top, 0px))', paddingBottom: 'max(1em, env(safe-area-inset-bottom, 0px))' }}>
+                <main id="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingTop: 'calc(68px + env(safe-area-inset-top, 0px))', paddingBottom: 'max(1em, env(safe-area-inset-bottom, 0px))' }}>
                     <SectionErrorBoundary>
                         <Suspense fallback={<RouteFallback />}>
                                 <Routes>
